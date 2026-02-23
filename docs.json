@@ -10,16 +10,10 @@
   "favicon": "/favicon.svg",
   "navigation": [
     {
-      "group": "Welcome",
+      "group": "Getting Started",
       "pages": [
         "index",
         "quickstart"
-      ]
-    },
-    {
-      "group": "Features",
-      "pages": [
-        "features/pdf-export"
       ]
     },
     {
