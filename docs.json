@@ -1,10 +1,11 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "name": "Helvi Enterprise Platform",
+  "theme": "mint",
   "colors": {
-    "primary": "#4f46e5",
-    "light": "#818cf8",
-    "dark": "#3730a3"
+    "primary": "#1A1A1A",
+    "light": "#4A4A4A",
+    "dark": "#000000"
   },
   "favicon": "/favicon.svg",
   "navigation": [
@@ -19,6 +20,12 @@
       "group": "Features",
       "pages": [
         "features/pdf-export"
+      ]
+    },
+    {
+      "group": "Changelog",
+      "pages": [
+        "changelog/v091-beta"
       ]
     }
   ],
