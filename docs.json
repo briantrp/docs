@@ -22,5 +22,17 @@
         ]
       }
     ]
+  },
+  "fonts": {
+    "family": "Inter",
+    "weight": 500,
+    "heading": {
+      "family": "Outfit",
+      "weight": 900
+    },
+    "body": {
+      "family": "Inter",
+      "weight": 500
+    }
   }
 }
