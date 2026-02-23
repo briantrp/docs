@@ -1,13 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
-  "name": "Helvi Enterprise Platform",
+  "name": "Helvi",
   "theme": "mint",
   "colors": {
     "primary": "#1A1A1A",
-    "light": "#4A4A4A",
+    "light": "#333333",
     "dark": "#000000"
   },
-  "favicon": "/favicon.svg",
   "navigation": [
     {
       "group": "Getting Started",
@@ -22,27 +20,5 @@
         "changelog/v091-beta"
       ]
     }
-  ],
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:support@helvi.io"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Go to Helvi",
-      "href": "https://helvi.io"
-    }
-  },
-  "footer": {
-    "socials": {
-      "github": "https://github.com/helvi-hq/helvi"
-    }
-  }
+  ]
 }
