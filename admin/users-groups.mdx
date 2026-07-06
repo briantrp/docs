@@ -61,8 +61,12 @@ From **Admin → Users**, you can take the following actions on any account:
   You cannot disable or delete your own account. Ask another admin to do this if needed.
 </Warning>
 
+### The Identity column
+
+Every row in **Admin → Users** shows an **Identity** badge indicating how the account was created: **Local**, **LDAP**, **SCIM**, **SAML**, or the OAuth provider it signed in with (Google, GitHub, Microsoft, etc.).
+
 <Note>
-  For users synchronized from LDAP or SCIM, profile fields such as name and email are managed in your company directory. Changes made in your directory will sync to Collabase automatically — editing them directly in Collabase is not possible for synchronized fields.
+  For users synchronized from LDAP, SCIM, or an OAuth/SAML sign-in, profile fields such as name and email are managed in your directory or identity provider. Changes made there sync to Collabase automatically — editing them directly in Collabase is not possible for synchronized fields. See [Identity Providers](/admin/identity-providers) for exactly which fields sync for each method.
 </Note>
 
 ---
@@ -176,42 +180,13 @@ See [Permissions](/concepts/permissions) for the full permission matrix by role 
 ## Automated provisioning (SCIM 2.0)
 
 <Warning>
-  SCIM provisioning requires an enterprise license. The SCIM section is not visible without a valid license key.
+  SCIM provisioning requires an enterprise license and must be turned on separately from generating a token.
 </Warning>
 
-SCIM 2.0 connects your identity provider (Okta, Microsoft Entra, JumpCloud, etc.) to Collabase so user accounts are created, updated, and deactivated automatically — no manual steps required when someone joins or leaves the organization.
+SCIM 2.0 connects your identity provider (Okta, Microsoft Entra, JumpCloud, etc.) to Collabase so user accounts and group memberships are created, updated, and deactivated automatically — no manual steps required when someone joins or leaves the organization.
 
-### Setting up SCIM
+SCIM is set up and managed from **Admin → Identity Providers → SCIM Provisioning**, not from this page. See [Identity Providers](/admin/identity-providers) for the full setup steps, the token generation and revoke flow, and exactly which fields sync automatically.
 
-<Steps>
-  <Step title="Generate a SCIM token">
-    Go to **Admin → Users** and scroll to the **SCIM Provisioning** section. Click **Generate Token**. Copy the token immediately — it is only shown once.
-  </Step>
-  <Step title="Configure your identity provider">
-    In your IdP's SCIM settings, enter:
-    - **SCIM base URL:** `https://your-collabase-domain/api/scim/v2`
-    - **Authentication method:** Bearer token
-    - **Bearer token:** the token you just copied
-  </Step>
-  <Step title="Assign the Collabase application to your users">
-    In your IdP, assign the Collabase SCIM application to the users or groups that should have access. The IdP will automatically push those users to Collabase.
-  </Step>
-  <Step title="Verify provisioning">
-    Check **Admin → Users** to confirm that the expected users have been created. The source column on each user row shows whether the account was provisioned via SCIM.
-  </Step>
-</Steps>
-
-<Warning>
-  The SCIM token is shown only once. If you lose it, delete it in **Admin → Users → SCIM Provisioning** and generate a new one. The old token stops working immediately when deleted.
-</Warning>
-
-### What SCIM manages automatically
-
-| Event in your IdP | What happens in Collabase |
-|---|---|
-| User is assigned to the Collabase app | A new Collabase account is created |
-| User's name or email changes in the directory | The Collabase profile is updated |
-| User is removed from the Collabase app | The Collabase account is deactivated |
-| User is re-assigned to the app | The account is re-activated |
+Once configured, check back here in **Admin → Users** — the **Identity** column on each row confirms whether an account was provisioned via SCIM, LDAP, SAML, or an OAuth provider.
 
 SCIM does not delete accounts — it only deactivates them. Content created by the user is preserved.

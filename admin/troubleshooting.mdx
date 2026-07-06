@@ -14,6 +14,8 @@ This page covers the most common problems encountered when running a Collabase i
 | Collabase is not responding | Services not started, port conflict, or startup crash | [App not responding](#app-not-responding) |
 | Cannot connect to the database | Wrong connection settings or database service not running | [Database connection](#database-connection-failures) |
 | Cannot log in | Wrong credentials, SSO misconfiguration, or locked account | [Authentication problems](#authentication-problems) |
+| LDAP sync did nothing or stopped with a warning | Safety guard triggered, misconfigured filter, or directory unreachable | [LDAP sync issues](#ldap-sync-issues) |
+| SCIM requests fail with "provisioning is disabled" | SCIM provisioning toggle is off, or the token was revoked | [SCIM provisioning issues](#scim-provisioning-issues) |
 | Emails are not being delivered | Mail provider not configured or incorrect SMTP settings | [Email delivery](#email-not-sending) |
 | AI features not working | Provider not configured, wrong API key, or Ollama not running | [AI not responding](#ai-features-not-responding) |
 | File uploads failing | Storage permissions, missing folder, or disk full | [File upload errors](#file-upload-errors) |
@@ -106,16 +108,22 @@ Use the **Forgot password** link on the login page. This sends a reset email to 
 
 After several failed login attempts, an account may be locked by brute-force protection. An admin can unlock it from **Admin → Users** by clicking the account and selecting **Unlock**.
 
-### SSO not working (Google, GitHub, SAML)
+### SSO not working (Google, GitHub, Microsoft, Okta, Keycloak, SAML)
 
 The standard email and password login is always available at `/auth/login`. Sign in there as an admin and check the identity provider settings under **Admin → Identity Providers**.
 
 <Steps>
   <Step title="Verify the redirect URI matches exactly">
-    The redirect URI registered in your OAuth provider (Google Cloud Console, GitHub, etc.) must match the URL Collabase is actually running on — including `https://` and no trailing slash.
+    The redirect URI registered in your provider (Google Cloud Console, GitHub, Microsoft Entra admin center, etc.) must match the URL Collabase is actually running on — including `https://` and no trailing slash.
   </Step>
   <Step title="Check the Client ID and Client Secret">
-    In **Admin → Identity Providers**, re-enter the credentials and click **Test Connection** if available.
+    In **Admin → Identity Providers**, re-enter the credentials and save again.
+  </Step>
+  <Step title="Microsoft only: confirm the Tenant ID is set">
+    Collabase refuses to save a Microsoft provider without a Tenant ID (Directory ID) — this is expected, not a bug. Copy it from the app registration's **Overview** page in the Microsoft Entra admin center.
+  </Step>
+  <Step title="Check Allowed email domains">
+    If a user reports being unable to sign in while others succeed, check whether **Allowed email domains** is set on that provider and whether the user's email domain is in the list.
   </Step>
   <Step title="Check that NEXTAUTH_URL is set correctly">
     Open your `.env` file and verify `NEXTAUTH_URL` is set to your Collabase URL exactly as users access it — e.g. `https://collabase.example.com`.
@@ -124,6 +132,56 @@ The standard email and password login is always available at `/auth/login`. Sign
     The `NEXTAUTH_SECRET` variable must be set to a long, random string. If it is missing or has changed since users last logged in, all sessions are invalidated.
   </Step>
 </Steps>
+
+---
+
+## LDAP sync issues
+
+### "This sync would disable an unusually large number of users"
+
+Collabase stops a sync automatically if it would deactivate more than a fifth of your previously-synced users, and asks you to confirm before proceeding.
+
+<Steps>
+  <Step title="Check the directory connection first">
+    Click **Test Connection** in **Admin → Identity Providers → LDAP**. If it fails, this is a connectivity or credentials problem, not a real change in your directory — fix the connection and sync again rather than forcing it through.
+  </Step>
+  <Step title="Check the User Search Filter and Base DN">
+    A filter or base DN that is too narrow will only match a fraction of your real users, making the rest look like they were removed. Compare the filter against your directory structure.
+  </Step>
+  <Step title="Only proceed if the drop is genuine">
+    If you recently removed a large group of users from the directory on purpose (e.g. after an offboarding event or organizational change), click **Sync anyway** to apply the deactivations.
+  </Step>
+</Steps>
+
+### "LDAP search returned 0 users"
+
+The sync found no matching entries and stopped without changing anything — this is always treated as a misconfiguration, not a genuinely empty directory, and cannot be forced through.
+
+Check the **Base DN** and **User Search Filter** fields, and confirm the **Bind DN** service account actually has read access to that part of the directory.
+
+### Users are not being created or updated
+
+Confirm the **Email Attribute** field matches the attribute your directory actually populates for that user (e.g. `mail` for OpenLDAP, `userPrincipalName` for Active Directory). Users without a value in that attribute are skipped.
+
+---
+
+## SCIM provisioning issues
+
+### Requests fail with "SCIM provisioning is disabled for this instance"
+
+The **Enable SCIM provisioning** toggle in **Admin → Identity Providers → SCIM Provisioning** is off. Turn it on — this is a separate switch from having a valid token, and both must be true for SCIM to work.
+
+### Requests fail with an invalid or unauthorized token error
+
+The token was revoked, mistyped, or never generated. Go to **Admin → Identity Providers → SCIM Provisioning**, revoke the old token if it still appears, generate a new one, and re-enter it in your identity provider. Tokens are shown only once at creation.
+
+### A profile field is not updating
+
+Check whether the field is one Collabase syncs from SCIM — see the table in [Identity Providers](/admin/identity-providers). Email address changes are never synced through SCIM by design; update the email directly in **Admin → Users** instead.
+
+### Group membership changes are not appearing
+
+Confirm the group and its members were actually assigned to the Collabase application in your identity provider — Collabase only receives group changes your IdP is configured to push.
 
 ---
 

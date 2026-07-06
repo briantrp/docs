@@ -33,7 +33,12 @@ If an employee joins or leaves a department, your provider will automatically up
 
 **Endpoint:** `PATCH /api/scim/v2/Groups/{id}`
 
-Your identity provider uses this endpoint to easily add new members or remove existing ones from the group.
+Your identity provider uses this endpoint to add new members or remove existing ones from the group. Collabase supports both common styles of member removal:
+
+- A `remove` operation with a `members` value array
+- A `remove` operation with a filtered path (e.g. `members[value eq "<id>"]`) and no value body — the form Microsoft Entra ID sends
+
+`displayName` can also be updated through this endpoint, either as a `replace` operation with a `path`, or as a no-path object replace.
 
 ## 4. Delete a group
 

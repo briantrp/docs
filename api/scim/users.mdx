@@ -25,26 +25,54 @@ When you assign a new employee to Collabase in your identity provider, it sends 
 
 **Endpoint:** `POST /api/scim/v2/Users`
 
-If a Collabase account with the exact same email address already exists, we will automatically link the existing account to your identity provider. No data will be lost.
-
 <Note>
-  **Required Fields:** Your identity provider must always send the user's email address, first name, and last name. If these are missing, the user cannot be created.
+  **Required field:** Only `userName` (the email address) is required. If no display name is sent, Collabase derives one from the part of the email before the `@`.
 </Note>
 
-## 3. Update or deactivate a user
+Collabase matches incoming users in this order:
 
-If a user changes their name or leaves the company, your provider will send an update.
+1. **By `externalId`**, if your provider sends one and a Collabase account with that `externalId` already exists.
+2. **By email address (`userName`)**, if no `externalId` match was found.
+
+If neither matches, a new account is created.
+
+<Warning>
+  If your provider sends an `externalId` that has no match, Collabase creates a new account rather than linking by email — it does not check for an existing account with the same email address first. If a local account with that email already exists (created manually, via LDAP, or another origin), the request fails instead of linking. This matters most on your first sync: make sure any pre-existing Collabase accounts your directory will provision don't collide, or let Collabase create them fresh.
+</Warning>
+
+## 3. Update a user
+
+If a user's details change, your provider sends a `PATCH` request with one or more operations.
 
 **Endpoint:** `PATCH /api/scim/v2/Users/{id}`
 
-To deactivate a user without losing their data, your provider will send an update setting their status to inactive. They will immediately lose access to Collabase, but their documents and tasks remain safe.
+Collabase applies changes to these attributes:
 
-## 4. Permanently delete a user
+| SCIM attribute | What it updates |
+|---|---|
+| `active` | Enables or disables the account |
+| `displayName` / `name.formatted` | Full display name |
+| `name.givenName` / `name.familyName` | First/last name — combined into the display name |
+| `title` | Job title |
+| `externalId` | The provider's identifier for this user |
+| `department` (enterprise extension) | Department |
 
-If you completely remove a user from your directory, your provider might try to delete them.
+<Note>
+  Both the standard `add`/`replace` operations with a `path`, and the no-path form that replaces multiple attributes in a single object, are supported.
+</Note>
+
+<Warning>
+  `userName` (email) is **not** updatable via PATCH. Email changes must be made directly in Collabase — email is the matching key used to link SCIM users to accounts, so allowing it to change through the sync could silently repoint a profile at the wrong person.
+</Warning>
+
+To deactivate a user without losing their data, your provider sends a `PATCH` setting `active` to `false`. They immediately lose access to Collabase, but their documents and tasks remain safe.
+
+## 4. Deactivate a user via DELETE
+
+If you completely remove a user from your directory, your provider might call this endpoint instead of PATCH.
 
 **Endpoint:** `DELETE /api/scim/v2/Users/{id}`
 
-<Warning>
-  **Danger:** This will permanently remove the user and their personal data from Collabase. This cannot be undone. We strongly recommend configuring your identity provider to deactivate users instead of deleting them.
-</Warning>
+<Note>
+  Despite the HTTP method, this does **not** permanently delete the user or their content. It has the same effect as a `PATCH` setting `active` to `false` — the account is deactivated and can be re-activated later by re-provisioning it. To permanently delete a user and their data, do it manually from **Admin → Users** in Collabase.
+</Note>

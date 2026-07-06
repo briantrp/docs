@@ -30,8 +30,11 @@ To connect your identity provider to Collabase, you need two things:
   <Step title="Navigate to Identity Providers">
     Click on **Identity Providers** in the sidebar.
   </Step>
+  <Step title="Enable SCIM provisioning">
+    In the **SCIM Provisioning** section, toggle **Enable SCIM provisioning** on. Requests are rejected with a 403 until this is on, regardless of whether your token is valid.
+  </Step>
   <Step title="Generate Token">
-    Scroll down to the **SCIM Tokens** section and click **Generate Token**. Copy this token immediately and paste it into your identity provider.
+    Click **Generate token**. Copy this token immediately and paste it into your identity provider — it is not shown again.
   </Step>
 </Steps>
 
@@ -51,5 +54,6 @@ We have gathered the official setup guides for the most common providers to help
 ## Troubleshooting
 
 If users are not syncing correctly, check the following:
+- Ensure **Enable SCIM provisioning** is toggled on in Collabase — a valid token alone is not enough.
 - Ensure the SCIM Token hasn't expired or been revoked.
 - Check the audit logs in your identity provider to see if the connection to your Collabase server is being blocked by your company firewall.
