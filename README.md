@@ -1,55 +1,70 @@
-# Mintlify Starter Kit
+# Collabase Documentation
 
-Use the starter kit to get your docs deployed and ready to customize.
+The user documentation for [Collabase](https://github.com/Collabase/collabase) — the source of the
+public docs site. Built with [Mintlify](https://mintlify.com): every page is an MDX file with YAML
+frontmatter, and `docs.json` defines the navigation.
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+**Contributions are welcome.** Docs live in the main Collabase repo precisely so the community can
+fix and improve them.
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+---
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
+## Read this first
 
-## AI-assisted writing
+```
+.agents/rules/documentation-rules.md
+```
 
-Set up your AI coding tool to work with Mintlify:
+That is the writing standard, and it is binding: audience, tone, page structure, components,
+terminology, `docs.json` navigation, and the release-note format. A PR that ignores it gets sent
+back, no matter how correct the content is.
+
+The short version:
+
+- Write for **"Peter from IT"** — the admin who runs Collabase, not a developer on it. No library
+  names, no architecture, no internal API routes. Exception: `developer/` and `api/` are written for
+  engineers.
+- Active voice, second person, short sentences. No marketing words, no filler.
+- `<Steps>` for every procedure. Tables for reference content.
+- Every new page goes into `docs.json`, or it does not exist on the site.
+
+---
+
+## Where the docs live, and how they publish
+
+The docs exist in two repos, byte-for-byte identical:
+
+| Repo | Path | Role |
+|---|---|---|
+| `Collabase/collabase` (fair-code, public) | `docs/docs/` | **Where you edit.** PRs land here. |
+| Publish repo (private) | repo root | **Where it deploys from.** Mintlify builds its default branch. |
+
+Edit in the Collabase repo. A maintainer copies merged changes into the publish repo and deploys.
+You never need access to the publish repo to contribute.
+
+> **Structure is frozen.** A maintainer copies files across by hand, so never move, rename, or
+> restructure folders, and never change `docs.json` beyond adding or reordering pages. A change that
+> only works in one repo breaks the copy and breaks the site.
+
+---
+
+## Local preview
 
 ```bash
-npx skills add https://mintlify.com/docs
+npm i -g mint          # once
+mint dev               # preview at http://localhost:3000
+mint broken-links      # every internal href must resolve
 ```
 
-This command installs Mintlify's documentation skill for your configured AI tools like Claude Code, Cursor, Windsurf, and others. The skill includes component reference, writing standards, and workflow guidance.
+Run both from this folder — the one containing `docs.json`.
 
-See the [AI tools guides](/ai-tools) for tool-specific setup.
+Troubleshooting: if a page 404s, check you are in the folder with `docs.json`. If the dev server
+misbehaves, `mint update` pulls the latest CLI.
 
-## Development
+---
 
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
+## Contributing
 
-```
-npm i -g mint
-```
-
-Run the following command at the root of your documentation, where your `docs.json` is located:
-
-```
-mint dev
-```
-
-View your local preview at `http://localhost:3000`.
-
-## Publishing changes
-
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
-
-## Need help?
-
-### Troubleshooting
-
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
-
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the docs-specific workflow, and the
+[Collabase contribution guide](https://github.com/Collabase/collabase/blob/main/CONTRIBUTING.md) for
+the process that applies to every PR — issue first, CLA, and AI-tool disclosure.

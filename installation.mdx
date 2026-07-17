@@ -10,7 +10,7 @@ Make sure your server meets these requirements before running the installer.
 | | Minimum |
 |---|---|
 | **Operating system** | Ubuntu 22.04+, Debian 12+, or RHEL 9+ |
-| **RAM** | 2 GB — 4 GB recommended (required for the AI features) |
+| **RAM** | 2 GB minimum — 4 GB recommended |
 | **Disk space** | 20 GB free |
 | **Docker** | Version 24 or later |
 | **Ports** | 80 and 443 must not be in use by another service |
@@ -81,7 +81,7 @@ Once it finishes, you will see a confirmation message with your URL. Open it in 
 </Tip>
 
 <Note>
-  If your server has less than 4 GB of RAM, the AI features (Brain) will not be available. All other features — wiki, tasks, test management, automation — work normally.
+  AI features (Brain, chat, AI automation) use the AI provider you configure after installation under **Settings → AI** — for example OpenAI, Anthropic, or your own Ollama server. They do not need extra server RAM.
 </Note>
 
 ---
@@ -102,7 +102,7 @@ After that, you can:
 To update to a new version, run:
 
 ```bash
-bash deployment/update.sh
+bash deployment/docker/update.sh
 ```
 
 The update script backs up your database, downloads the latest version, and restarts everything automatically. You do not need to touch any configuration files.
@@ -118,27 +118,39 @@ The update script backs up your database, downloads the latest version, and rest
 If you need to change the URL or other settings configured during installation:
 
 ```bash
-bash deployment/install.sh --reconfigure
+bash deployment/docker/install.sh --reconfigure
 ```
 
 Your data is not affected — only the configuration is updated.
 
 ---
 
-## Useful commands
+## Managing your installation
+
+The install script doubles as a management tool. Run it with a command:
+
+| Command | What it does |
+|---|---|
+| `bash deployment/docker/install.sh status` | Shows whether all services are running and healthy |
+| `bash deployment/docker/install.sh logs` | Shows live logs (press Ctrl+C to stop) |
+| `bash deployment/docker/install.sh restart` | Restarts all services |
+| `bash deployment/docker/install.sh stop` | Stops Collabase — your data is kept |
+| `bash deployment/docker/install.sh start` | Starts a stopped installation |
+| `bash deployment/docker/install.sh restore <file>` | Restores a database backup from `./backups/` |
+| `bash deployment/docker/install.sh support-bundle` | Packs logs and status into an archive for support — never your passwords |
+| `bash deployment/docker/install.sh --help` | Lists every command and option |
+
+Before an update you can preview what would happen without changing anything:
 
 ```bash
-# Check if all services are running
-docker compose -f deployment/docker-compose.release.yml ps
+bash deployment/docker/update.sh --dry-run
+```
 
-# View live logs
-docker compose -f deployment/docker-compose.release.yml logs -f
+Updates can be pinned to a specific version and undone:
 
-# Restart Collabase
-docker compose -f deployment/docker-compose.release.yml restart
-
-# Stop Collabase (data is kept)
-docker compose -f deployment/docker-compose.release.yml down
+```bash
+bash deployment/docker/update.sh --version v0.12.0   # stay on this version
+bash deployment/docker/update.sh rollback            # return to the previous one
 ```
 
 ---
@@ -150,7 +162,7 @@ docker compose -f deployment/docker-compose.release.yml down
 The first start takes a little longer than usual — up to 3 minutes. If it still does not respond after that, check the logs:
 
 ```bash
-docker compose -f deployment/docker-compose.release.yml logs -f
+docker compose -f deployment/docker/docker-compose.release.yml logs -f
 ```
 
 ### Port 80 or 443 is already in use
@@ -163,7 +175,7 @@ sudo ss -tlnp | grep ':80\|:443'
 
 ### The AI / Brain feature is not available
 
-The AI feature requires at least 4 GB of RAM. If your server has enough RAM and Brain is still not working, contact Collabase support.
+AI features need an AI provider to be configured. Go to **Settings → AI**, choose a provider (for example OpenAI or your own Ollama server), enter its access key, and use the **Test connection** button. If the test succeeds and Brain still does not work, contact Collabase support.
 
 ### I need help
 

@@ -109,7 +109,7 @@ Mount your NAS share on the server and set the backup destination path to the mo
 <Steps>
   <Step title="Stop the application (keep the database running)">
     ```bash
-    docker compose -f deployment/docker-compose.release.yml stop collabase-app
+    docker compose -f deployment/docker/docker-compose.release.yml stop collabase-app
     ```
   </Step>
   <Step title="Restore the database backup">
@@ -128,7 +128,7 @@ Mount your NAS share on the server and set the backup destination path to the mo
   </Step>
   <Step title="Start the application">
     ```bash
-    docker compose -f deployment/docker-compose.release.yml start collabase-app
+    docker compose -f deployment/docker/docker-compose.release.yml start collabase-app
     ```
   </Step>
   <Step title="Verify the restore">

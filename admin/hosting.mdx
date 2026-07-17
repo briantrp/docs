@@ -18,13 +18,11 @@ Collabase starts several services when it launches. Each one has a specific role
 | **Queue** | Handles background jobs: automation runs, AI indexing, notifications |
 | **Reverse proxy** | Handles HTTPS, routes traffic to the application, enforces security headers and rate limits |
 | **Document processor** | Converts uploaded files (PDFs, Word documents, etc.) and generates printable exports |
-| **Code runner** | Executes code blocks in automation workflows in an isolated sandbox |
-| **AI engine** | Powers the Brain feature — local AI search, chat, and document analysis |
 
 All services run as isolated processes with restricted permissions. None of them have access to your host system beyond what they need to function.
 
 <Note>
-  The AI engine is only started on servers with at least 4 GB of RAM. On smaller servers, all features except Brain work normally.
+  AI features (Brain, chat, AI automation) run inside the application and use the AI provider you configure under **Settings → AI**. There is no separate AI service to size or manage.
 </Note>
 
 ---
@@ -33,10 +31,9 @@ All services run as isolated processes with restricted permissions. None of them
 
 | Configuration | Minimum RAM | Recommended RAM |
 |---|---|---|
-| Standard (without AI) | 2 GB | 3 GB |
-| With AI (Brain feature) | 4 GB | 6 GB |
+| Collabase | 2 GB | 4 GB |
 
-The installer detects your available RAM and automatically starts the right configuration. You do not need to select this manually.
+There is only one configuration — the installer checks that your server meets the minimum and starts everything.
 
 ---
 
@@ -116,13 +113,13 @@ Updates are applied with a single command that handles everything automatically.
 To check whether all services are running:
 
 ```bash
-docker compose -f deployment/docker-compose.release.yml ps
+docker compose -f deployment/docker/docker-compose.release.yml ps
 ```
 
 A healthy installation shows all services with a `healthy` or `running` status. If any service shows `restarting`, check its logs:
 
 ```bash
-docker compose -f deployment/docker-compose.release.yml logs <service-name> --tail 50
+docker compose -f deployment/docker/docker-compose.release.yml logs <service-name> --tail 50
 ```
 
 ---

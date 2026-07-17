@@ -1,0 +1,141 @@
+---
+title: "File storage"
+description: "Where Collabase stores uploaded files, and how to switch from local disk to S3-compatible object storage."
+---
+
+## The two storage modes
+
+Collabase stores uploaded files — attachments, images, banners — in one of two places:
+
+| Mode | Where files live | When to use it |
+|---|---|---|
+| **Local disk** (default) | On the server, inside Docker volumes | Single-server installations. Works out of the box, nothing to configure. |
+| **S3 object storage** | In a bucket you provide | Kubernetes, servers with small disks, or when you want storage managed and backed up by a provider. Required for running more than one application instance. |
+
+You do not need S3. Every standard installation runs on local disk and can stay there.
+
+---
+
+## Compatible providers
+
+Collabase works with any storage that speaks the S3 protocol. Tested and known-good setups:
+
+| Provider | Notes |
+|---|---|
+| **AWS S3** | Set the region; no endpoint needed. |
+| **MinIO** (self-hosted) | Popular for on-premise setups. Set the endpoint to your MinIO URL and leave path-style enabled. |
+| **Cloudflare R2** | Set the endpoint from your R2 dashboard; no egress fees. |
+| **Infomaniak Object Storage** | Swiss provider, S3-compatible. Set the endpoint from your console. |
+| Other S3-compatible services | Generally work if they support the standard S3 API. Keep path-style enabled unless the provider documents otherwise. |
+
+---
+
+## Setting up the bucket
+
+Create **one private bucket** for Collabase. Three rules matter:
+
+1. **The bucket must not be publicly readable.** Collabase serves every file through the
+   application, where access permissions are checked. A public bucket would let anyone
+   bypass those checks with a direct link. Do not attach public-read policies or ACLs.
+2. **Create a dedicated access key** for Collabase — do not reuse an admin key.
+3. **Grant only the three permissions Collabase needs**, limited to that one bucket:
+
+| Permission | Used for |
+|---|---|
+| `s3:GetObject` | Reading and serving files (also covers existence checks) |
+| `s3:PutObject` | Storing uploads |
+| `s3:DeleteObject` | Removing files when users delete attachments |
+
+Collabase does not need `s3:ListBucket`, bucket administration rights, or access to any
+other bucket. A minimal policy (AWS and MinIO use the same format):
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::YOUR-BUCKET-NAME/*"
+    }
+  ]
+}
+```
+
+<Tip>
+  Optional but recommended: enable server-side encryption and object versioning on the
+  bucket in your provider's console. Collabase does not require either, but versioning
+  gives you an undo for accidental deletions.
+</Tip>
+
+---
+
+## Configuration
+
+Add these settings to your `.env` (Docker) or values file (Kubernetes):
+
+| Setting | Value |
+|---|---|
+| `STORAGE_DRIVER` | `s3` (default is `local`) |
+| `S3_BUCKET` | Your bucket name |
+| `S3_ENDPOINT` | The provider's S3 endpoint URL — leave empty for AWS |
+| `S3_REGION` | The bucket's region (default `us-east-1`; MinIO accepts the default) |
+| `S3_ACCESS_KEY_ID` | The dedicated access key |
+| `S3_SECRET_ACCESS_KEY` | Its secret |
+| `S3_FORCE_PATH_STYLE` | `true` (default) — required for MinIO and most self-hosted services; AWS works either way |
+
+On Kubernetes, the same settings live under `storage.*` in the Helm values — see the
+[Kubernetes installation guide](/installation-kubernetes).
+
+---
+
+## Switching an existing installation to S3
+
+Your existing files must be copied into the bucket once. Collabase ships a migration
+command that does this and is safe to re-run (already-copied files are skipped):
+
+<Steps>
+  <Step title="Prepare">
+    Create the bucket and access key as described above. Do not change `.env` yet.
+  </Step>
+  <Step title="Preview the migration">
+    ```bash
+    STORAGE_DRIVER=s3 S3_BUCKET=... S3_ENDPOINT=... \
+    S3_ACCESS_KEY_ID=... S3_SECRET_ACCESS_KEY=... \
+    npx tsx scripts/migrate-storage-to-s3.ts --dry-run
+    ```
+    This lists what would be copied without changing anything.
+  </Step>
+  <Step title="Run it">
+    Run the same command without `--dry-run`. It copies all files and updates stored
+    image links so they keep working from the bucket.
+  </Step>
+  <Step title="Switch the configuration">
+    Add the `STORAGE_DRIVER=s3` block to your `.env`, then restart:
+    ```bash
+    bash deployment/docker/install.sh restart
+    ```
+  </Step>
+  <Step title="Verify, then clean up">
+    Open a few pages with attachments and images. When everything loads, the old local
+    files under the Docker volumes are no longer used and can be removed at your leisure.
+  </Step>
+</Steps>
+
+---
+
+## Troubleshooting
+
+**Uploads fail after switching.** Check the access key and that the policy covers
+`s3:PutObject` on the bucket. The application log names the failing operation.
+
+**Images load but new uploads fail.** The key can read but not write — the policy is
+missing `s3:PutObject`.
+
+**Everything fails against MinIO or a self-hosted service.** Make sure
+`S3_FORCE_PATH_STYLE` is `true` (the default) and the endpoint includes the scheme,
+for example `https://minio.internal:9000`.
+
+**I need help.** Open a ticket at
+[collabase.featurebase.app](https://collabase.featurebase.app/en) with the output of a
+support bundle: `bash deployment/docker/install.sh support-bundle`.

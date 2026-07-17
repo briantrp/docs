@@ -1,0 +1,114 @@
+---
+title: "Installation on Docker Swarm"
+description: "Run Collabase as a Docker Swarm stack with managed secrets and rolling updates."
+---
+
+## Before you start
+
+This guide is for teams that already run a Docker Swarm cluster. If you have a
+single Linux server, the [standard installation](/installation) is the
+recommended path — Swarm adds management overhead without a benefit there.
+
+You need a working Swarm (at least one manager node) and the release package
+unpacked on a manager:
+
+```bash
+unzip collabase-deployment-<version>.zip
+cd deployment
+```
+
+<Note>
+  Collabase runs as a **single application instance** on Swarm, and the
+  database is pinned to one designated node so it always finds its data.
+</Note>
+
+---
+
+## Install
+
+<Steps>
+  <Step title="Label the data node">
+    Choose the node that will hold the database and uploads, and label it:
+
+    ```bash
+    docker node update --label-add collabase.data=true <node-name>
+    ```
+  </Step>
+  <Step title="Create the secrets">
+    Swarm stores passwords as managed secrets — they never appear in
+    configuration files. Create them once:
+
+    ```bash
+    printf '%s' "$(openssl rand -base64 48)" | docker secret create collabase_nextauth_secret -
+    printf '%s' "your-database-password"    | docker secret create collabase_postgres_password -
+    printf '%s' "your-admin-password"       | docker secret create collabase_admin_password -
+    printf '%s' "$(openssl rand -hex 32)"   | docker secret create collabase_pdf_print_token -
+    printf '%s' "$(openssl rand -hex 32)"   | docker secret create collabase_automation_encryption_key -
+    printf '%s' "$(openssl rand -hex 32)"   | docker secret create collabase_encryption_key -
+    printf '%s' "$(openssl rand -base64 32)" | docker secret create collabase_mail_encryption_key -
+    ```
+  </Step>
+  <Step title="Create the proxy configuration">
+    Generate the reverse-proxy configuration with the installer, then register
+    it as a Swarm config:
+
+    ```bash
+    bash docker/install.sh --help   # see the non-interactive variables
+    # after install.sh has written docker/Caddyfile:
+    docker config create collabase_caddyfile docker/Caddyfile
+    ```
+  </Step>
+  <Step title="Deploy the stack">
+    ```bash
+    NEXTAUTH_URL=https://collabase.yourcompany.com \
+    COLLABASE_DOMAIN=collabase.yourcompany.com \
+    docker stack deploy -c swarm/docker-compose.swarm.yml collabase
+    ```
+  </Step>
+  <Step title="Check the services">
+    ```bash
+    docker stack services collabase
+    ```
+
+    All services should reach `1/1` replicas within a few minutes.
+  </Step>
+</Steps>
+
+---
+
+## Updating
+
+Pull the new images and redeploy — Swarm rolls the services with an automatic
+rollback if a service fails to start:
+
+```bash
+docker stack deploy -c swarm/docker-compose.swarm.yml collabase
+```
+
+---
+
+## Removing
+
+```bash
+docker stack rm collabase
+```
+
+Your data volumes and secrets are kept. To delete data too, remove the volumes
+listed by `docker volume ls | grep collabase` — this cannot be undone.
+
+---
+
+## Troubleshooting
+
+**A service stays at 0/1 replicas.** Ask Swarm why:
+
+```bash
+docker service ps collabase_collabase-app --no-trunc
+```
+
+**The database service will not start on another node.** That is intentional —
+it is pinned to the node you labeled in step 1 so it never loses its data. To
+move it, move the volume first, then relabel.
+
+**I need help.** Open a ticket at
+[collabase.featurebase.app](https://collabase.featurebase.app/en).

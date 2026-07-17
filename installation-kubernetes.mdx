@@ -1,0 +1,173 @@
+---
+title: "Installation on Kubernetes"
+description: "Run Collabase in your Kubernetes cluster with the official Helm chart."
+---
+
+## Before you start
+
+This guide is for teams that already operate a Kubernetes cluster. If you have a
+single Linux server, the [standard installation](/installation) is simpler and
+fully supported — you do not need Kubernetes to run Collabase.
+
+You need:
+
+| | Requirement |
+|---|---|
+| **Cluster** | Kubernetes 1.26 or later |
+| **Tools** | `kubectl` and Helm 3.10+ on your machine |
+| **Ingress** | An ingress controller (the chart defaults to nginx) |
+| **Certificates** | cert-manager with a ClusterIssuer, if you want automatic HTTPS |
+| **Storage** | A default StorageClass (about 45 GB across all volumes) |
+
+<Note>
+  By default the chart runs Collabase as a **single instance** with files on
+  cluster volumes. To run multiple instances, switch file storage to an
+  S3-compatible bucket and enable the dedicated worker — see
+  [Scaling out](#scaling-out) below.
+</Note>
+
+---
+
+## Install
+
+The chart ships inside the release package under `deployment/helm`.
+
+<Steps>
+  <Step title="Download and unpack the release">
+    Download `collabase-deployment-<version>.zip` from the
+    [releases page](https://github.com/Collabase/collabase/releases) and unpack it.
+  </Step>
+  <Step title="Install the chart">
+    ```bash
+    helm install collabase ./deployment/helm \
+      --namespace collabase --create-namespace \
+      --set app.url=https://collabase.yourcompany.com \
+      --set ingress.host=collabase.yourcompany.com \
+      --set ingress.tls.clusterIssuer=letsencrypt-prod
+    ```
+
+    All passwords and keys are generated automatically on first install.
+  </Step>
+  <Step title="Wait for the first start">
+    The database setup runs as a one-time job right after install. The
+    application can answer with errors for a minute or two until it finishes.
+    Watch it complete:
+
+    ```bash
+    kubectl get jobs -n collabase --watch
+    ```
+  </Step>
+  <Step title="Read your admin password">
+    ```bash
+    kubectl get secret collabase -n collabase \
+      -o jsonpath='{.data.adminPassword}' | base64 -d
+    ```
+
+    Log in at your URL with `admin@collabase.local` (or the email you set via
+    `--set app.adminEmail=...`) and this password.
+  </Step>
+</Steps>
+
+---
+
+## Updating
+
+```bash
+helm upgrade collabase ./deployment/helm -n collabase --reuse-values
+```
+
+Database migrations run automatically before the new version starts.
+
+<Warning>
+  **Never delete the `collabase` Secret in the namespace.** It holds the key
+  that encrypts stored credentials (for example mail and integration logins).
+  If that key is lost, those stored credentials cannot be recovered and must
+  be entered again. Upgrades always keep the existing keys — deleting the
+  Secret by hand is the only way to lose them.
+</Warning>
+
+To get an automatic database backup before every upgrade, enable the backup
+option once:
+
+```bash
+helm upgrade collabase ./deployment/helm -n collabase \
+  --reuse-values --set backup.enabled=true
+```
+
+---
+
+## Using your own database
+
+If you run a managed PostgreSQL (for example Cloud SQL or RDS):
+
+```bash
+--set postgresql.enabled=false \
+--set postgresql.externalUrl="postgresql://user:password@your-db-host:5432/collabase"
+```
+
+<Note>
+  Collabase needs the `vector` extension in PostgreSQL. On managed databases
+  you may have to enable it explicitly in your provider's console before the
+  first install.
+</Note>
+
+---
+
+## Scaling out
+
+Running more than one application instance requires two things, and the chart
+refuses to render without them (with a message explaining why):
+
+1. **S3 file storage** — with cluster volumes, a second instance cannot see
+   files the first one stored. Set up a private bucket first
+   ([File storage guide](/admin/file-storage) — providers, permissions, policy):
+
+   ```bash
+   --set storage.driver=s3 \
+   --set storage.s3.bucket=collabase \
+   --set storage.s3.endpoint=https://your-s3-endpoint \
+   --set storage.s3.accessKeyId=... \
+   --set storage.s3.secretAccessKey=...
+   ```
+
+2. **The dedicated worker** — background jobs (automations, indexing) move to
+   their own single instance so they run exactly once:
+
+   ```bash
+   --set workers.separate=true \
+   --set replicaCount=3
+   ```
+
+The database connection pool is split across instances automatically.
+
+<Note>
+  If you migrate an existing single-instance installation to S3, copy the
+  files into the bucket first — the [File storage guide](/admin/file-storage)
+  has the step-by-step migration.
+</Note>
+
+---
+
+## Restoring a backup
+
+Restore your database dump first, **then** run `helm upgrade`. Do not restore
+into a brand-new `helm install` — a fresh install runs its first-time setup,
+which would write on top of your restored data.
+
+---
+
+## Troubleshooting
+
+**The install failed with a job error.** Read the job's log — it names the
+problem directly:
+
+```bash
+kubectl logs job/collabase-migrate -n collabase
+```
+
+**The page shows errors right after install.** Normal for the first minute or
+two while the setup jobs finish. Check `kubectl get jobs -n collabase`.
+
+**I need help.** Open a ticket at
+[collabase.featurebase.app](https://collabase.featurebase.app/en) and attach
+the output of `kubectl get pods -n collabase` and the job log above.

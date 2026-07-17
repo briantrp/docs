@@ -28,7 +28,7 @@ This page covers the most common problems encountered when running a Collabase i
 The first start after installation can take up to 3 minutes. If Collabase still does not respond after that, check the logs:
 
 ```bash
-docker compose -f deployment/docker-compose.release.yml logs -f
+docker compose -f deployment/docker/docker-compose.release.yml logs -f
 ```
 
 Look for error messages near the end of the output. Common causes:
@@ -40,13 +40,13 @@ Look for error messages near the end of the output. Common causes:
 ### Checking service status
 
 ```bash
-docker compose -f deployment/docker-compose.release.yml ps
+docker compose -f deployment/docker/docker-compose.release.yml ps
 ```
 
 All services should show `running`. If any service shows `exited` or `restarting`, check its individual logs:
 
 ```bash
-docker compose -f deployment/docker-compose.release.yml logs collabase-app
+docker compose -f deployment/docker/docker-compose.release.yml logs collabase-app
 ```
 
 ### Port conflict
@@ -68,11 +68,11 @@ Collabase connects to PostgreSQL using the `DATABASE_URL` environment variable.
 <Steps>
   <Step title="Check that the database service is running">
     ```bash
-    docker compose -f deployment/docker-compose.release.yml ps collabase-postgres
+    docker compose -f deployment/docker/docker-compose.release.yml ps collabase-postgres
     ```
     The status should be `running`. If not, start it:
     ```bash
-    docker compose -f deployment/docker-compose.release.yml start collabase-postgres
+    docker compose -f deployment/docker/docker-compose.release.yml start collabase-postgres
     ```
   </Step>
   <Step title="Verify the DATABASE_URL is set correctly">
@@ -91,7 +91,7 @@ Collabase connects to PostgreSQL using the `DATABASE_URL` environment variable.
   <Step title="Restart the application">
     After fixing the configuration, restart all services:
     ```bash
-    docker compose -f deployment/docker-compose.release.yml restart
+    docker compose -f deployment/docker/docker-compose.release.yml restart
     ```
   </Step>
 </Steps>
@@ -203,7 +203,7 @@ Collabase sends emails for password resets, notifications, and invitations. Thes
   </Step>
   <Step title="Check the application logs">
     ```bash
-    docker compose -f deployment/docker-compose.release.yml logs collabase-app | grep -i mail
+    docker compose -f deployment/docker/docker-compose.release.yml logs collabase-app | grep -i mail
     ```
     Error messages here will identify the exact problem.
   </Step>
@@ -269,7 +269,7 @@ Collabase sends emails for password resets, notifications, and invitations. Thes
   </Step>
   <Step title="Restart the application">
     ```bash
-    docker compose -f deployment/docker-compose.release.yml restart collabase-app
+    docker compose -f deployment/docker/docker-compose.release.yml restart collabase-app
     ```
     Some permission issues resolve after a clean restart.
   </Step>

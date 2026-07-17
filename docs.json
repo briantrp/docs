@@ -1,27 +1,17 @@
 {
-
   "$schema": "https://mintlify.com/docs.json",
-
   "theme": "almond",
-
   "name": "Collabase",
-
   "colors": {
     "primary": "#2d97fb",
     "light": "#2d97fb",
     "dark": "#ffffff"
   },
-
   "favicon": "/images/collabase-icon-v2_blue.png",
-
   "logo": {
-
     "light": "/images/collabase-logo-v2.png",
-
     "dark": "/images/collabase-logo-v2-weiss.png"
-
   },
-
   "navbar": {
     "primary": {
       "type": "button",
@@ -29,61 +19,35 @@
       "href": "https://collabase.ch"
     }
   },
-
   "navigation": {
-
     "tabs": [
-
       {
-
         "tab": "Documentation",
-
         "groups": [
-
           {
-
             "group": "Get Started",
-
             "pages": [
-
               "introduction",
-
               "installation",
-
+              "installation-kubernetes",
+              "installation-swarm",
               "first-run"
-
             ]
-
           },
-
           {
-
             "group": "Core Concepts",
-
             "pages": [
-
               "concepts/spaces",
-
               "concepts/space-settings",
-
               "concepts/permissions",
-
               "concepts/search",
-
               "concepts/ai",
-
               "concepts/profile"
-
             ]
-
           },
-
           {
-
             "group": "Collabase Apps",
-
             "pages": [
-
               {
                 "group": "Docs",
                 "pages": [
@@ -93,7 +57,6 @@
                   "docs/suggestions"
                 ]
               },
-
               {
                 "group": "Projects",
                 "pages": [
@@ -111,7 +74,6 @@
                   "projects/portal"
                 ]
               },
-
               {
                 "group": "Test Management",
                 "pages": [
@@ -122,7 +84,6 @@
                   "test-management/suites"
                 ]
               },
-
               {
                 "group": "Automation",
                 "pages": [
@@ -216,7 +177,6 @@
                   }
                 ]
               },
-
               {
                 "group": "Time Tracking",
                 "pages": [
@@ -231,7 +191,6 @@
                   "time-tracking/worklog-attributes"
                 ]
               },
-
               {
                 "group": "Intranet",
                 "pages": [
@@ -242,7 +201,6 @@
                   "intranet/birthdays"
                 ]
               },
-
               {
                 "group": "Registry",
                 "pages": [
@@ -253,41 +211,24 @@
                   "registry/csv-import"
                 ]
               }
-
             ]
-
           },
-
           {
-
             "group": "Administration",
-
             "pages": [
-
               "admin/users-groups",
-
               "admin/time-tracking",
-
               "admin/identity-providers",
-
               "admin/ai-configuration",
-
               "admin/hosting",
-
+              "admin/file-storage",
               "admin/backup",
-
               "admin/updates",
-
               "admin/troubleshooting"
-
             ]
-
           }
-
         ]
-
       },
-
       {
         "tab": "Release Notes",
         "groups": [
@@ -295,6 +236,7 @@
             "group": "Releases",
             "pages": [
               "changelog/overview",
+              "changelog/v0.11.0-rc",
               "changelog/v0.10.0-rc",
               "changelog/v0.9.7-rc",
               "changelog/v0.9.0-rc",
@@ -303,66 +245,43 @@
           }
         ]
       },
-
       {
         "tab": "Developer",
         "groups": [
-          { "group": "Building Extensions", "pages": ["developer/wasm"] }
+          {
+            "group": "Building Extensions",
+            "pages": [
+              "developer/wasm"
+            ]
+          }
         ]
       },
-
       {
-
         "tab": "API Reference",
-
         "groups": [
-
           {
-
             "group": "Overview",
-
             "pages": [
-
               "api/introduction"
-
             ]
-
           },
-
           {
-
             "group": "Pages",
-
             "pages": [
-
               "api/pages/create-page"
-
             ]
-
           },
-
           {
-
             "group": "Test Management",
-
             "pages": [
-
               "api/test-management/list-projects",
-
               "api/test-management/create-project",
-
               "api/test-management/create-test-case",
-
               "api/test-management/create-test-run"
-
             ]
-
           },
-
           {
-
             "group": "Automation",
-
             "pages": [
               "api/automation/list-automations",
               "api/automation/create-automation",
@@ -390,32 +309,24 @@
                 ]
               }
             ]
-
           },
-
           {
-
             "group": "SCIM 2.0",
-
             "pages": [
               "api/scim/overview",
               "api/scim/users",
               "api/scim/groups"
             ]
-
           },
-
           {
             "group": "Health",
-            "pages": [ "api/health" ]
+            "pages": [
+              "api/health"
+            ]
           }
-
         ]
-
       }
-
     ]
-
   },
   "fonts": {
     "family": "Geist",
@@ -429,5 +340,4 @@
       "weight": 500
     }
   }
-
 }

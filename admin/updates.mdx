@@ -55,7 +55,7 @@ Open Collabase in a browser and confirm it loads correctly. Check the current ve
 If the script exits with an error, the most likely cause is a database connectivity issue. Check the logs:
 
 ```bash
-docker compose -f deployment/docker-compose.release.yml logs collabase-app --tail 50
+docker compose -f deployment/docker/docker-compose.release.yml logs collabase-app --tail 50
 ```
 
 If the application fails to start after the update, the pre-update backup created in step 1 is still in `deployment/backups/`. See [Backup & Restore](/admin/backup) for restore instructions.
@@ -101,7 +101,7 @@ If the new version has a critical problem, restore the database backup created b
 <Steps>
   <Step title="Stop the application">
     ```bash
-    docker compose -f deployment/docker-compose.release.yml stop collabase-app
+    docker compose -f deployment/docker/docker-compose.release.yml stop collabase-app
     ```
   </Step>
   <Step title="Restore the pre-update database backup">
@@ -113,7 +113,7 @@ If the new version has a critical problem, restore the database backup created b
   </Step>
   <Step title="Start the application">
     ```bash
-    docker compose -f deployment/docker-compose.release.yml up -d
+    docker compose -f deployment/docker/docker-compose.release.yml up -d
     ```
   </Step>
 </Steps>
