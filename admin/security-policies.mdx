@@ -1,0 +1,92 @@
+---
+sidebarTitle: "Security Policies"
+description: "Control how long a sign-in stays valid, lock out repeated failed logins, and let named people sign in with a password when SSO is enforced."
+---
+
+Security policies are under **Settings → Security → Policies**. Each policy has a switch and its own settings, which open when you click the row.
+
+<Note>
+  Changing policy settings requires Collabase Enterprise. The default values apply on every installation, including Community.
+</Note>
+
+---
+
+## Session lifetime
+
+Controls how long a sign-in stays valid. This policy is always active and cannot be switched off.
+
+| Setting | Default | What it does |
+|---|---|---|
+| **Sign out after inactivity** | 8 hours | Ends the session when nobody uses the account for this long |
+| **Maximum session lifetime** | 30 days | Ends the session this long after signing in, even for someone working every day |
+| **Maximum devices per user** | 0 (unlimited) | When the limit is reached, the next sign-in ends the device that has been idle longest |
+| **Sign out other devices on password change** | On | Signs out every other device when someone changes their password |
+
+Both timers run at the same time, and whichever is reached first ends the session. With the defaults, someone who steps away for a full working day has to sign in again, and someone who works daily has to sign in again after a month.
+
+<Note>
+  Changes apply to people signing in from now on. Anyone already signed in keeps the limits that were set when they signed in.
+</Note>
+
+### Choosing values
+
+<Steps>
+  <Step title="Open Settings → Security → Policies">
+    Click the **Session lifetime** row to open its settings.
+  </Step>
+  <Step title="Set the inactivity timeout">
+    Shorter is safer, but people will be asked to sign in more often. 8 hours covers a working day. 30 minutes suits shared or public computers.
+  </Step>
+  <Step title="Set the maximum lifetime">
+    This is the hard limit. Even someone using Collabase every day has to sign in again once it is reached.
+  </Step>
+  <Step title="Save">
+    Click **Save**. The new values apply to the next sign-in.
+  </Step>
+</Steps>
+
+---
+
+## Your active devices
+
+Everyone can see where their own account is signed in, under **Settings → Profile → Security**. The list shows the browser and operating system, the last time each device was used, and marks the one you are using now.
+
+Click **Sign out** next to a device to end that session, or **Sign out all other devices** to end every session except the current one. The device is signed out the next time it makes a request.
+
+Use this after signing in on a computer that is not yours, or if you suspect somebody else has access to your account.
+
+---
+
+## Brute-force protection
+
+Locks an account after repeated failed sign-in attempts, so a stolen email address cannot be paired with guessed passwords.
+
+| Setting | Default | What it does |
+|---|---|---|
+| **Maximum sign-in attempts** | 5 | Failed attempts allowed before the account is locked |
+| **Lockout duration** | 15 minutes | How long the account stays locked |
+
+Locked accounts are listed under **Settings → Security → Brute Force Protection**, where you can release one early.
+
+---
+
+## SSO bypass
+
+When single sign-on is enforced, everybody is sent to the identity provider. This policy lets named people and groups sign in with an email address and password instead.
+
+Keep at least one administrator on this list. If the identity provider becomes unreachable and nobody can bypass it, nobody can sign in.
+
+<Steps>
+  <Step title="Turn the policy on">
+    Click the switch in the **SSO bypass** row.
+  </Step>
+  <Step title="Add the people who need it">
+    Search for users and groups, and select them. Administrators responsible for recovery belong here.
+  </Step>
+  <Step title="Generate the bypass link">
+    Click **Generate token**, then copy the link and share it with the people you selected. Opening it shows the password sign-in form.
+  </Step>
+  <Step title="Save">
+    Click **Save**.
+  </Step>
+</Steps>

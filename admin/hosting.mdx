@@ -18,6 +18,7 @@ Collabase starts several services when it launches. Each one has a specific role
 | **Queue** | Handles background jobs: automation runs, AI indexing, notifications |
 | **Reverse proxy** | Handles HTTPS, routes traffic to the application, enforces security headers and rate limits |
 | **Document processor** | Converts uploaded files (PDFs, Word documents, etc.) and generates printable exports |
+| **Collaboration relay** | Syncs live edits, cursors, and presence between people on the same page. Runs by default; [live collaboration](/docs/collaboration) can be turned off |
 
 All services run as isolated processes with restricted permissions. None of them have access to your host system beyond what they need to function.
 
@@ -27,13 +28,18 @@ All services run as isolated processes with restricted permissions. None of them
 
 ---
 
-## Memory requirements
+## Memory and CPU
 
-| Configuration | Minimum RAM | Recommended RAM |
+| | Minimum | Recommended |
 |---|---|---|
-| Collabase | 2 GB | 4 GB |
+| **RAM** | 4 GB | 8 GB |
+| **CPU** | 2 vCPU | 4 vCPU |
 
-There is only one configuration — the installer checks that your server meets the minimum and starts everything.
+The installer checks that your server meets the minimum and starts everything.
+
+The 4 GB minimum assumes live collaboration is on, which is the default. The collaboration relay adds roughly 200–500 MB; the rest is the application, database, queue, document processor, and proxy sharing the server. On a 2 GB server, only turn collaboration on if the box has headroom — otherwise [turn it off](/docs/collaboration#turning-it-off), which brings the minimum back down to 2 GB.
+
+To match resources to your team size — and to move the database, uploads, or the application onto separate servers as you grow — see [Sizing & scaling](/admin/scaling).
 
 ---
 

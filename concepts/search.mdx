@@ -72,6 +72,128 @@ Filters can be combined. For example, filtering by **Type: Tasks** and **Space: 
 
 ---
 
+## Advanced search with CQL
+
+For precise filtering, switch the filter bar from **Basic** to **Advanced** to write a query in the Collabase Query Language (CQL). CQL lets you express conditions that would be hard to build with the visual filters — like "work items assigned to me, due in the past, and not yet done". As you type, the search bar suggests the available fields, operators, and values, so you rarely need to memorize anything.
+
+Advanced search works for **work items** (tasks) and **pages**.
+
+### How a query is built
+
+A query is one or more conditions in the form `field operator value`:
+
+```
+priority = "High"
+```
+
+Combine conditions with `AND`, `OR`, and `NOT`, and group them with parentheses:
+
+```
+priority = "High" AND status != "Done"
+(priority = "High" OR priority = "Critical") AND author = "Ada Lovelace"
+```
+
+The field for the assigned person is written `author`, and the person who created the item is `createdBy` — the search bar shows the friendly name ("Assignee") next to each field as you pick it.
+
+Text values go in quotes. Numbers and dates do not need quotes.
+
+### Choosing values by name, never by ID
+
+You always filter by the **name or label** you see in the app — never an internal ID. Type a person's name for an assignee, the label for a dropdown option, or the object's name for a registry relation:
+
+```
+author = "Mitch Davies"
+taskType = "Bug"
+```
+
+If a name matches more than one person, the query matches all of them. If it matches nobody, the search bar tells you so instead of silently returning everything.
+
+### Operators by field type
+
+The operators available depend on the kind of field:
+
+| Field type | Operators you can use |
+|---|---|
+| Text (title, and text custom fields) | `=`, `!=`, `~` (contains), starts-with (`~"Onboard*"`), ends-with (`~"*review"`) |
+| Number (story points, number custom fields) | `=`, `!=`, `>`, `>=`, `<`, `<=` |
+| Date (due date, start date, created, updated) | `=`, `!=`, `>`, `>=`, `<`, `<=` |
+| Choice (status, priority, type, dropdowns) | `=`, `!=`, `IN (…)`, `NOT IN (…)` |
+| People (`author` = assignee, `createdBy`) | `=`, `!=`, `IN (…)`, `NOT IN (…)` |
+| Labels | `IN (…)`, `NOT IN (…)` |
+
+Use `IN` to match any of several values at once:
+
+```
+status IN ("To Do", "In Progress") AND label IN ("bug", "urgent")
+```
+
+### Checking for empty or filled fields
+
+Use `IS EMPTY` and `IS NOT EMPTY` to find items where a field has no value or any value:
+
+```
+author IS EMPTY
+dueDate IS NOT EMPTY
+```
+
+### Filtering on custom fields
+
+Reference a custom field by its key, prefixed with `cf.`. Custom fields support the operators that match their type — for example a number custom field supports ranges, and a dropdown supports `IN`:
+
+```
+cf.budget > 5000
+cf.stage IN ("Won", "Lost")
+cf.owner IS EMPTY
+```
+
+### Relative dates
+
+For date fields you can use relative offsets and helpers instead of typing a calendar date:
+
+| Value | Meaning |
+|---|---|
+| `-7d`, `-2w`, `-3m`, `1y` | Days, weeks, months, or years from today |
+| `today()` | The start of today |
+| `now()` | The current moment |
+| `startOfWeek()`, `endOfWeek()` | The current week's boundaries |
+| `currentUser()` | The person running the search |
+
+```
+dueDate < today() AND author = currentUser()
+```
+
+### Ready-made questions (functions)
+
+For work items, a set of built-in functions answer common questions directly:
+
+| Function | Matches work items that… |
+|---|---|
+| `isOverdue()` | Have a due date in the past |
+| `hasNoAssignee()` | Have nobody assigned |
+| `hasNoLabel()` | Have no labels |
+| `isTopLevel()` | Are not a sub-item |
+| `isSubWorkItem()` | Are a sub-item of another |
+| `hasChildren()` | Have at least one sub-item |
+| `hasStartAndDueDates()` | Have both a start and a due date |
+
+```
+isOverdue() AND hasNoAssignee()
+```
+
+### Sorting results
+
+End a query with `ORDER BY` to control the order, adding `ASC` or `DESC`:
+
+```
+status = "In Progress" ORDER BY priority DESC, dueDate ASC
+```
+
+<Note>
+  Advanced search always respects your permissions — it only ever returns work items and pages in Spaces you can access, exactly like Basic search.
+</Note>
+
+---
+
 ## Semantic search (AI-powered)
 
 When an admin has enabled **Semantic Search** under **Admin → Settings → AI**, you can ask questions in plain language and receive answers grounded in your actual content:

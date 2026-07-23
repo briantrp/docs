@@ -1,0 +1,83 @@
+---
+sidebarTitle: "Sizing & Scaling"
+description: "How much RAM and CPU Collabase needs for your team, and how to spread it across separate servers as you grow."
+---
+
+# Sizing & Scaling
+
+Collabase runs on a single server by default — the application, database, queue, document processor, collaboration relay, and reverse proxy all on one machine. This page explains how to size that server for your team, and how to move parts of it onto separate machines when one server is no longer enough.
+
+## What drives resource use
+
+Three different numbers matter, and they are easy to confuse:
+
+| Number | What it costs |
+|---|---|
+| **Registered members** | Database size, and a little disk. A few thousand accounts is light — the database holds them comfortably on the minimum spec. |
+| **Members active at the same time** | Application CPU and memory. This is the main driver, and it is far smaller than the total member count — most people are not editing at any given moment. |
+| **People editing one page together** | The collaboration relay. Each shared document is cheap; the cost scales with how many people edit the *same* page at once, not with the total. |
+
+Size for peak **concurrent activity**, not for the total member count.
+
+## Sizing a single server
+
+These are starting points for the default single-server install. Begin here, then adjust from what [monitoring](/admin/hosting#monitoring-your-installation) actually shows — a document-heavy team with constant PDF exports needs more than a team that mostly reads.
+
+| Concurrent active members | RAM | CPU | Disk |
+|---|---|---|---|
+| Up to ~25 | 4 GB | 2 vCPU | 20 GB |
+| ~25–100 | 8 GB | 4 vCPU | 40 GB |
+| ~100–250 | 16 GB | 8 vCPU | 80 GB+ |
+| ~250+ | Scale out (below) | | |
+
+<Note>
+  The 4 GB minimum assumes live collaboration is on. Turning it [off](/docs/collaboration#turning-it-off) removes the relay and brings the floor back to 2 GB for a small install.
+</Note>
+
+Disk grows with uploaded files, the database, and daily backups. Watch it and expand the volume before it fills — see [Disk usage](/admin/hosting#disk-usage).
+
+## Scaling beyond one server
+
+When a single server can no longer keep up — sustained high CPU, memory pressure that a bigger box would only postpone, or a need for redundancy — spread Collabase across machines. Do it in this order; each step removes one reason the application server has to be big.
+
+| Signal | What to change |
+|---|---|
+| Disk fills with uploads, or you want durable file storage | Move uploads to **object storage (S3)** |
+| The database competes with the application for memory and CPU | Move the **database to its own server** |
+| One application server can't handle peak load, or you need no-downtime updates | Run **multiple application replicas** |
+
+Horizontal scaling — multiple application replicas — is available on the **Kubernetes (Helm)** and **Docker Swarm** deployments. The single-server Docker install scales *up* (a bigger machine), not *out*.
+
+### Move uploads to object storage
+
+Point file storage at an S3-compatible bucket instead of the local disk. Uploads then live in the bucket, not on the server, so the application server needs almost no data disk and any number of replicas share the same files. Set `STORAGE_DRIVER=s3` (Docker) or `storage.driver: s3` (Helm) — full steps are in [File storage](/admin/file-storage).
+
+Object storage is also a prerequisite for running more than one application replica: replicas must not each hold their own copy of uploads.
+
+### Move the database to its own server
+
+Run PostgreSQL on a dedicated or managed server and point Collabase at it. This frees the application server's memory and CPU for serving requests, and lets you size and back up the database independently.
+
+- **Kubernetes:** set `postgresql.enabled: false` and `postgresql.externalUrl` to your database's connection string.
+- **Docker Swarm:** point `DATABASE_URL` at the external database and remove the in-stack Postgres service.
+
+The database must be PostgreSQL 16+ with the `pgvector` extension (used by AI search).
+
+### Run multiple application replicas
+
+With uploads on S3 and the database external, the application server is stateless and can run as several identical replicas behind the reverse proxy, sharing the load and surviving the loss of any one.
+
+<Steps>
+  <Step title="Meet the prerequisites">
+    Object storage (`storage.driver: s3`) and — so background jobs run in exactly one place — a dedicated worker. On Helm, set `workers.separate: true`.
+  </Step>
+  <Step title="Raise the replica count">
+    On Helm, set `replicaCount` to the number of application instances you want. Swarm uses the service's `replicas` setting. The chart refuses `replicaCount > 1` without object storage, because local uploads cannot be shared.
+  </Step>
+</Steps>
+
+## The collaboration relay at scale
+
+The relay is a single process and handles a large number of connections across all documents on one instance — no cluster and no Redis are needed for typical deployments. The practical ceiling is per *document*: a page with dozens of simultaneous editors is fine, and only very large single-page sessions (around a hundred people editing one page at once) reach the point where cursor traffic dominates.
+
+If you ever need to run more than one relay instance for redundancy or extreme scale, that requires a shared Redis for the relay to coordinate — a setup worth a scaling consultation rather than a default.

@@ -112,6 +112,19 @@ Use velocity to set realistic sprint goals. If your team consistently completes 
 
 ---
 
+## Subtasks and sprints
+
+A project can keep parent and child tasks together when their sprint changes, using two settings under **Project settings → Cycles**:
+
+| Setting | What it does |
+|---|---|
+| **Carry child work items** | When a task moves in or out of a sprint, its subtasks move with it. It also applies when you create a new subtask under a task that is already in a sprint — the subtask is placed in the same sprint automatically. |
+| **Carry parent work item** | When a subtask moves in or out of a sprint, its parent task moves with it. |
+
+If **Carry child work items** is off but the parent task is in a sprint, creating a subtask shows a short prompt offering to add the new subtask to that sprint, so it is never placed there without your say-so. These behaviours are only available to members who are allowed to manage sprint scope (see below).
+
+---
+
 ## Who can manage sprints
 
 Sprint management actions are restricted by the space's Permission Scheme.

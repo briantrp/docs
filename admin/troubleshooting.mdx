@@ -20,6 +20,7 @@ This page covers the most common problems encountered when running a Collabase i
 | AI features not working | Provider not configured, wrong API key, or Ollama not running | [AI not responding](#ai-features-not-responding) |
 | File uploads failing | Storage permissions, missing folder, or disk full | [File upload errors](#file-upload-errors) |
 | Migration failed during update | Database version mismatch or missing pgvector extension | [Migration failures](#migration-failures) |
+| Work items are missing from a board | Their status belongs to a workflow the project no longer uses | [Work items missing from a board](#work-items-missing-from-a-board) |
 
 ---
 
@@ -274,6 +275,30 @@ Collabase sends emails for password resets, notifications, and invitations. Thes
     Some permission issues resolve after a clean restart.
   </Step>
 </Steps>
+
+---
+
+## Work items missing from a board
+
+A work item that appears in the backlog and in the work item list, but never in any board column, is holding a status that does not belong to the project's workflow. The board builds its columns from that workflow, so a status from anywhere else matches no column and the card is not drawn.
+
+This can affect items created before Collabase started checking the status on save, or items left behind when a project's workflow was switched without mapping every status across.
+
+<Steps>
+  <Step title="Find the affected projects">
+    Open **Doctor → Orphaned statuses**. The scan lists every project holding such items and how many are affected. An empty result means no project is affected and the cause is elsewhere.
+  </Step>
+  <Step title="Open the project's workflow settings">
+    Go to the project, then **Settings → Workflow**. The status list here is what the board can display.
+  </Step>
+  <Step title="Move the items onto the current workflow">
+    Start a workflow change and map every status that is still in use to one of the new workflow's statuses. Collabase refuses the change while any status in use is unmapped, so nothing can be stranded a second time.
+  </Step>
+</Steps>
+
+<Note>
+  If you would rather fix a single item instead of the whole project, open it and set its status from the detail view. It reappears on the board as soon as its status belongs to the project's workflow.
+</Note>
 
 ---
 

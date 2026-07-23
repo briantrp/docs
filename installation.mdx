@@ -10,12 +10,17 @@ Make sure your server meets these requirements before running the installer.
 | | Minimum |
 |---|---|
 | **Operating system** | Ubuntu 22.04+, Debian 12+, or RHEL 9+ |
-| **RAM** | 2 GB minimum — 4 GB recommended |
+| **CPU** | 2 vCPU minimum — 4 vCPU recommended |
+| **RAM** | 4 GB minimum — 8 GB recommended |
 | **Disk space** | 20 GB free |
 | **Docker** | Version 24 or later |
 | **Ports** | 80 and 443 must not be in use by another service |
 
 The installer checks all of these automatically and will tell you if something is missing.
+
+<Note>
+  The 4 GB minimum assumes live collaboration is on (the default). It runs one extra service, the collaboration relay. If you [turn collaboration off](/docs/collaboration#turning-it-off), 2 GB is enough for a small install. See [Sizing & scaling](/admin/scaling) to match resources to your team.
+</Note>
 
 <Note>
   **macOS and Windows** are supported for testing and local use. On Windows, use Docker Desktop with WSL2.
@@ -39,7 +44,7 @@ Collabase is optimized out of the box. You do not need to tune anything for the 
 | 6,000+ users | Contact Collabase for a scaling consultation |
 
 <Note>
-  The number of registered accounts has no impact on performance. What matters is how many people are actively using the app at the same moment.
+  The number of registered accounts has no impact on performance. What matters is how many people are actively using the app at the same moment. To match RAM and CPU to that number — and to spread Collabase across separate servers as you grow — see [Sizing & scaling](/admin/scaling).
 </Note>
 
 ---

@@ -1,0 +1,76 @@
+---
+sidebarTitle: "Live Collaboration"
+description: "Several people edit the same page at once and see each other's changes, cursors, and presence in real time. On by default; an administrator can turn it off."
+---
+
+# Live Collaboration
+
+Live collaboration lets several people edit the same page at the same time. Everyone sees each other's changes appear as they are typed, along with each person's cursor and a set of avatars showing who else is on the page.
+
+It works on Standard and Blog pages and on Canvas pages.
+
+<Note>
+  Live collaboration is **on by default**. A new install has it running, and an existing install picks it up on the next update. An administrator can [turn it off](#turning-it-off) — pages then return to single-writer mode, where one person edits and a conflict warning appears if someone else saved in the meantime.
+</Note>
+
+## How it works
+
+When two or more people open the same page, their edits are merged continuously. There is no "who has the lock" and no save button to coordinate — everyone can type at once, and every change reaches everyone else within a fraction of a second.
+
+- **Character by character.** Each keystroke is sent to the other editors immediately. You watch other people's text appear as they write it, not after they save.
+- **No conflicts.** Two people editing the same sentence at the same time is resolved automatically — both changes are kept. Nobody's work is overwritten.
+- **Cursors.** Each collaborator's text cursor is shown in their own colour, labelled with their name, so you can see exactly where someone is working.
+- **Presence avatars.** The people currently on the page appear as a row of avatars in the page toolbar, next to the edit and save controls. You see them whether you are editing or just viewing, so you always know who else is here.
+
+## Who appears
+
+Anyone who has the page open is part of the session — both people who are editing and people who are only viewing. A viewer sees live changes and other people's cursors but cannot type until they enter edit mode. Access is unchanged: a person only joins the session for a page they are already allowed to open.
+
+## How changes are saved
+
+You never need to press a save button to keep other people in sync — that happens live. Saving to the database is automatic and happens on two independent tracks:
+
+| What | When it saves |
+|---|---|
+| **Live sync between people** | Instantly, on every keystroke |
+| **The shared document** | Automatically, about 10 seconds after the last edit stops |
+| **The page's own draft** | On the normal page save (manual on Standard and Blog pages, automatic on other types) |
+
+Because the shared document is written a few seconds after activity settles, closing the tab right after a burst of typing is safe — the change was already sent to everyone and is stored shortly after.
+
+## How many people
+
+There is no fixed limit. Because changes merge automatically, a page handles dozens of simultaneous editors comfortably. Very large single-page sessions — roughly a hundred people editing one page at the same moment — are where cursor traffic becomes the practical ceiling, similar to other real-time editors. For normal team use you will not reach it.
+
+## What runs, and what it costs
+
+Live collaboration adds one service — the **collaboration relay** — which the installer starts for you and the reverse proxy already routes to. You do not configure anything to switch it on; it is on after an install or an update.
+
+The relay is a single lightweight process. Budget roughly **200–500 MB of RAM** for it, depending on how many people edit at once. Because it is on by default, it is already counted in the **4 GB minimum** for a server. If your server is tight on memory and you do not need collaborative editing, turning it off (below) brings the minimum back down to 2 GB. See [Sizing & scaling](/admin/scaling) to size for your team.
+
+<Note>
+  If the relay is ever unreachable — it is stopped, out of memory, or still starting — pages fall back to single-writer editing on their own. Collaboration failing never blocks editing.
+</Note>
+
+## Turning it off
+
+Collaboration is controlled by one setting: `COLLAB_RELAY_URL`. Clearing it turns collaboration off and stops the relay on the next run.
+
+<Steps>
+  <Step title="Clear the relay address">
+    In your `.env` file, set `COLLAB_RELAY_URL` to an empty value:
+
+    ```bash
+    COLLAB_RELAY_URL=""
+    ```
+  </Step>
+  <Step title="Re-run the installer or updater">
+    Run `bash update.sh` (or `bash install.sh`). The relay is stopped and pages return to single-writer editing. On Kubernetes, set `collab.enabled: false` in your values file and upgrade the release instead.
+  </Step>
+</Steps>
+
+Existing page content is unaffected — it is stored the same way whether collaboration is on or off, so you can turn it off and back on at any time.
+
+<Warning>
+  `COLLAB_SHARED_SECRET` in your `.env` proves that edits and presence come from your own Collabase, and it must stay identical for the application and the relay. The installer and updater generate it for you — do not change it, share it, or reuse it elsewhere.
+</Warning>
