@@ -12,8 +12,8 @@
     "dark": "/images/favicon_darkmode.png"
   },
   "logo": {
-    "light": "/images/collabase-logo-v2.png",
-    "dark": "/images/collabase-logo-v2-weiss.png"
+    "light": "/images/logo_blackblack.png",
+    "dark": "/images/logo_blackwhite.png"
   },
   "navbar": {
     "primary": {
@@ -348,11 +348,9 @@
     ]
   },
   "fonts": {
-    "family": "Outfit",
-    "weight": 500,
     "heading": {
-      "family": "Geist",
-      "weight": 900
+      "family": "Outfit",
+      "weight": 600
     },
     "body": {
       "family": "Geist",
@@ -363,12 +361,46 @@
     "library": "lucide"
   },
   "background": {
-    "decoration": "grid"
+    "decoration": "grid",
+    "color": {
+      "light": "#f7f7f7"
+    }
   },
   "interaction": {
     "drilldown": true
   },
   "markdown": {
     "schema": true
+  },
+  "metadata": {
+    "timestamp": true
+  },
+  "styling": {
+    "codeblocks": "dark"
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "download-pdf",
+      "download-spec",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "grok",
+      "aistudio",
+      "mcp",
+      "add-mcp",
+      "vscode",
+      "cursor"
+    ],
+    "display": "header"
+  },
+  "api": {
+    "examples": {
+      "prefill": true,
+      "autogenerate": true
+    },
+    "url": "full"
   }
 }
