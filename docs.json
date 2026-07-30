@@ -31,7 +31,8 @@
               "installation",
               "installation-kubernetes",
               "installation-swarm",
-              "first-run"
+              "first-run",
+              "desktop-app"
             ]
           },
           {
@@ -42,6 +43,8 @@
               "concepts/permissions",
               "concepts/search",
               "concepts/ai",
+              "concepts/collabase-ai",
+              "concepts/collabase-ai-skills",
               "concepts/profile"
             ]
           },
@@ -222,6 +225,7 @@
               "admin/identity-providers",
               "admin/security-policies",
               "admin/ai-configuration",
+              "admin/ai-costs",
               "admin/hosting",
               "admin/scaling",
               "admin/file-storage",
@@ -239,6 +243,7 @@
             "group": "Releases",
             "pages": [
               "changelog/overview",
+              "changelog/v0.13.0-rc",
               "changelog/v0.12.2-rc",
               "changelog/v0.12.0-rc",
               "changelog/v0.11.0-rc",
@@ -274,6 +279,12 @@
             "group": "Pages",
             "pages": [
               "api/pages/create-page"
+            ]
+          },
+          {
+            "group": "Work Items",
+            "pages": [
+              "api/tasks/move-work-item"
             ]
           },
           {

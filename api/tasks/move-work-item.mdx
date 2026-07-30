@@ -1,0 +1,112 @@
+---
+title: "Move work item"
+description: "Move a work item and its sub-items to another project, with an explicit status mapping."
+api: "POST /api/v1/tasks/{taskId}/move"
+---
+
+Moves a work item to another project, optionally in another Space. Sub-items move with it, and every
+moved item receives a new key in the destination project. The old keys keep resolving, so existing
+links continue to work.
+
+<Info>
+  You need the **Move tasks** permission in the source Space and **Create tasks** plus **View tasks**
+  in the destination. Pass your API key as a Bearer token in the `Authorization` header.
+</Info>
+
+<Warning>
+  The status mapping is required and is never guessed. A caller that omits it receives `422` rather
+  than having its work items placed on a column nobody chose.
+</Warning>
+
+## Path parameters
+
+<ParamField path="taskId" type="string" required>
+  UUID of the work item to move.
+</ParamField>
+
+## Request body
+
+<ParamField body="targetProjectId" type="string" required>
+  UUID of the destination project.
+</ParamField>
+
+<ParamField body="statusMapping" type="object" required>
+  Maps every status currently in use anywhere in the work item's tree to a status in the destination
+  project's workflow. Keys are the current status ids, values the destination status ids. A status
+  left out, or one that does not belong to the destination workflow, returns `422`.
+</ParamField>
+
+<ParamField body="baseUpdatedAt" type="string" required>
+  The work item's `updatedAt` at the moment you read it, in ISO 8601. If the item changed since, the
+  request returns `409` instead of overwriting that change.
+</ParamField>
+
+<ParamField body="subtreeTaskIds" type="string[]" required>
+  The work item and every sub-item you expect to move. If the tree changed since you read it, the
+  request returns `409` so you can re-read and confirm.
+</ParamField>
+
+<ParamField body="targetTaskTypeId" type="string">
+  Work item type to use in the destination. It must belong to the destination project. Omit it to
+  use that project's default workflow.
+</ParamField>
+
+## Response
+
+<ResponseField name="moved" type="object" required>
+  The work item's new location: `id`, the new `key`, `spaceSlug` and `projectSlug`.
+</ResponseField>
+
+<ResponseField name="movedCount" type="number" required>
+  How many work items were relocated, including sub-items.
+</ResponseField>
+
+<ResponseField name="droppedFieldCount" type="number" required>
+  How many custom field values had no counterpart in the destination and were archived.
+</ResponseField>
+
+## Status codes
+
+| Code | Meaning |
+|---|---|
+| `200` | The work item was moved |
+| `401` | Missing or invalid API token |
+| `403` | You may not move this work item to that project |
+| `404` | The work item or the destination project does not exist |
+| `409` | The work item or its sub-items changed since you read them |
+| `422` | The body failed validation, or the status mapping is incomplete |
+
+<RequestExample>
+
+```bash cURL
+curl -X POST https://collabase.example.com/api/v1/tasks/6f1e.../move \
+  -H "Authorization: Bearer $COLLABASE_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "targetProjectId": "9a2c...",
+    "statusMapping": { "3b7d...": "c41f..." },
+    "baseUpdatedAt": "2026-07-27T10:00:00.000Z",
+    "subtreeTaskIds": ["6f1e..."]
+  }'
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+{
+  "data": {
+    "moved": {
+      "id": "6f1e...",
+      "key": "OPS-7",
+      "spaceSlug": "platform",
+      "projectSlug": "operations"
+    },
+    "movedCount": 3,
+    "droppedFieldCount": 1
+  }
+}
+```
+
+</ResponseExample>

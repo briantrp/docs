@@ -1,0 +1,240 @@
+---
+sidebarTitle: "AI Model & Cost"
+description: "Which model to run CollabaseAI on, how many tokens a single question actually uses, and what that adds up to on an instance with 100 users."
+---
+
+Every question put to CollabaseAI sends more than the question. It sends the assistant's instructions, the definitions of all its skills, whatever you have open, and the results of every lookup it makes along the way. This page shows what that comes to, so you can pick a model and predict the bill instead of discovering it.
+
+Two kinds of number appear below. **Measured** figures come from the shipped configuration and are exact for this release. **Estimated** figures depend on your content and your users, and are marked as such. Every calculation is written out so you can redo it with your own numbers.
+
+<Note>
+  Tokens are counted here as **characters ÷ 4**, the same approximation Collabase uses internally when it splits pages for indexing. Real tokenizers differ by 10 to 20 percent, more for German and French than for English.
+</Note>
+
+---
+
+## What every request carries
+
+This block is identical on every request, no matter what is asked.
+
+| Part of the request | Characters | ≈ Tokens | |
+|---|---|---|---|
+| **Identity and tone** | 1,016 | 250 | Measured |
+| **Working instructions** | 3,485 | 870 | Measured |
+| **Answer style rules** | 1,439 | 360 | Measured |
+| **Page and whiteboard format** | 4,716 | 1,180 | Measured |
+| **Skill catalogue** (34 skills: names, descriptions, inputs) | 22,157 | 5,539 | Measured |
+| **Fixed total** | **32,813** | **≈ 8,200** | |
+
+Nearly two thirds of that fixed cost is the skill catalogue. It grows with every skill added to the assistant, at roughly 150 tokens per skill, and it is paid on every request whether the skill is used or not.
+
+<Warning>
+  This number moves between releases. The catalogue went from 18 to 31 skills in a single release, which raised the fixed cost of every request by about 40 percent, and it has since grown to 34. Re-check your provider's usage figures after an upgrade rather than assuming last quarter's average still holds.
+</Warning>
+
+### What gets added on top
+
+| What is added | Upper bound | ≈ Tokens | |
+|---|---|---|---|
+| The work item or page you have open | 12,000 characters | up to 3,000 | Measured cap |
+| Semantic search passages | 8 passages of ~512 tokens | up to 4,100 | Measured caps |
+| The question itself | 10 to 30 words | 15 to 40 | Estimated |
+| Earlier turns in the same chat | no cap, grows with the chat | varies | |
+| The result of one lookup (10 work items) | ~2,000 characters | ~500 | Estimated |
+| The result of the activity digest | up to 100 entries | up to 4,500 | Estimated from measured caps |
+
+### Every step pays the fixed cost again
+
+The assistant works in steps: it asks for something, reads what comes back, and either asks for more or answers. Each step is a fresh request carrying the full fixed block plus everything gathered so far. It takes **at most 8 steps** in one turn.
+
+That is why the number below is not "one question, one request".
+
+---
+
+## What single questions cost
+
+Input tokens, summed across every step of one turn. Semantic search is off in these examples.
+
+| Question | Steps | ≈ Input | ≈ Output | |
+|---|---|---|---|---|
+| "What can you do?" | 1 | 8,200 | 80 | Estimated |
+| "My open work items" | 2 | 17,000 | 200 | Estimated |
+| A question about the item you have open | 1 | 11,200 | 200 | Estimated |
+| "What happened in the last two weeks?" | 2 | 21,000 | 400 | Estimated |
+| Creating a work item, from approving to done | 5 across 2 turns | 43,600 | 350 | Estimated |
+| Worst case: 8 steps with large results | 8 | 87,000 | 600 | Estimated |
+
+### The arithmetic behind one row
+
+"My open work items", the most common shape of question:
+
+```
+Step 1   8,200 fixed  +    20 question                        =  8,220
+Step 2   8,220 above  +    30 the lookup  +  500 the results  =  8,750
+                                                     Input    = 16,970
+                                                     Output   =    200
+```
+
+Every other row in the table is built the same way: one line per step, each carrying the 8,200 fixed block plus whatever has accumulated. Substitute your own numbers to redo any of them.
+
+Turn semantic search on and each step carries up to 4,100 tokens more, which takes the same question to roughly 25,200 input tokens.
+
+Output stays small on purpose. The assistant is instructed to answer in two to four sentences, so on a per-token basis the bill is dominated by input, usually by a factor of 40 or more.
+
+---
+
+## What a user costs per month
+
+**Assumptions**, adjust them to your own organisation:
+
+- An active user asks **5 questions on a working day**, over 21 working days: 105 questions a month
+- Of those, 25 percent need no lookup, 55 percent need one, 20 percent run multi-step over about four steps
+- Semantic search is off
+
+```
+Average per question   0.25 × 8,200  +  0.55 × 17,000  +  0.20 × 32,700
+                     = 2,050        +  9,350          +  6,540          = 17,940
+
+Per user per month     105 × 17,940  ≈  1,900,000 input tokens
+                       105 × 250     ≈     26,000 output tokens
+```
+
+So roughly **1.9 million input and 26,000 output tokens per active user per month**.
+
+---
+
+## What an instance with 100 users costs
+
+**Assumptions:** 40 of the 100 use the assistant daily as above, the other 60 use it occasionally, around 10 questions a month.
+
+```
+Heavy users     40 × 1,900,000                    = 76,000,000 input
+Occasional      60 × 10 × 17,940                  = 10,800,000 input
+                                          Total   ≈ 87,000,000 input tokens
+
+Output          40 × 26,000  +  60 × 10 × 250     ≈  1,200,000 output tokens
+```
+
+Turn that into money with your provider's prices:
+
+```
+Monthly bill = 87 × (price per million input) + 1.2 × (price per million output)
+```
+
+| Input, per million | Output, per million | Monthly bill at 87M / 1.2M |
+|---|---|---|
+| $0.10 | $0.40 | ≈ $9 |
+| $0.50 | $1.50 | ≈ $45 |
+| $2.00 | $8.00 | ≈ $185 |
+| $5.00 | $15.00 | ≈ $450 |
+
+The prices in that table are brackets, not quotes. They span roughly what small to large models cost at the time of writing. Take the current numbers from your provider's price page and put them into the formula.
+
+On a self-hosted provider the per-token price is zero and the cost is your hardware. The token volume is the same, so it still tells you how much work the machine has to do.
+
+<Note>
+  Collabase records per-request token usage itself, see [Measuring instead of estimating](#measuring-instead-of-estimating) below. Compare it against your provider's own usage dashboard after the first month: the two count tokens with different tokenizers and will not match to the digit.
+</Note>
+
+---
+
+## Measuring instead of estimating
+
+Everything above is arithmetic. **Admin → Settings → AI settings → Usage** is the measurement: it records every model call your instance actually made, with tokens in, tokens out, and cost, broken down by area and by model over the last 7, 30 or 90 days.
+
+The figures come from your own database, not from the provider's billing API and not from analytics, so the page works with telemetry switched off and needs no extra credentials.
+
+<Note>
+  Cost is calculated from a price list shipped with Collabase, and the page names the date that list was last updated. A model that is not on it contributes its tokens but no cost, and the page says how many requests that affected — the total is then a lower bound, never a guess.
+</Note>
+
+Re-ranking, if you use the **Language model** option for it, appears as its own line: it is a full model call per search.
+
+---
+
+## Setting a ceiling
+
+The **Limits** card sits on the same Usage page, directly under the figures, so you set a limit next to what is actually being spent. All three are checked before a question reaches the model.
+
+| Field | Description |
+|---|---|
+| **Tokens per person per day** | The most one member may spend between midnight and midnight. Counts input and output together, across every step of every question |
+| **Tokens per month, all users** | The most the whole instance may spend in a calendar month. This is the ceiling that protects the bill |
+| **Tokens per answer** | Caps the length of a single answer. Stops a model that will not stop on its own |
+
+`0` means no limit, and that is the shipped default, so nothing changes until you set a number.
+
+When a member reaches the daily limit, the assistant declines the next question and says the usage limit has been reached. Nothing is lost: the daily count resets at midnight and the monthly count on the first of the month, and an answer already being written is allowed to finish.
+
+<Note>
+  A limit is a cost control, not a permission. If Collabase cannot read the usage figures for a moment, the question goes through rather than locking everyone out of the assistant.
+</Note>
+
+---
+
+## What moves the number
+
+| Lever | Effect |
+|---|---|
+| **Semantic search** | Adds up to 4,100 tokens to every step of every question that uses it, close to doubling the cost of a typical question |
+| **Re-ranking via the language model** | One extra request per search. A dedicated re-ranking model, hosted or self-run, is billed separately and far more cheaply |
+| **Working from an open item or page** | Adds up to 3,000 tokens per step, and usually saves a lookup, so it is often cheaper overall |
+| **Long conversations** | Every turn re-sends the whole chat. Starting a new conversation for a new subject is the single easiest saving |
+| **New skills** | Each one adds around 150 tokens to every request on the instance, used or not. Thirteen new skills in one release added roughly 2,000 tokens to every question asked |
+| **Thinking models** | Reasoning is billed as output, several hundred tokens per answer |
+| **Prompt caching** | The fixed block is byte-identical on every request. Providers that discount a repeated prompt prefix apply that discount here automatically. Whether they do, and by how much, is up to the provider |
+
+---
+
+## Choosing a model
+
+The assistant asks more of a model than the writing assistant does. Three requirements decide whether a model is usable at all.
+
+**Reliable tool calling.** Thirty-four skill definitions go out with every request, and the model has to pick the right one and fill in its inputs correctly. A model that is merely good at prose will invent answers instead of looking them up.
+
+**A context window of at least 32,000 tokens, ideally 64,000.** Before a single result comes back, one request can already carry 8,200 fixed, plus up to 3,000 for the open item, plus up to 4,100 for search passages: about 15,300 tokens. Results then accumulate over as many as 8 steps. Anything under 32,000 truncates on the harder questions, and 32,000 itself is tight once semantic search is on.
+
+**Instruction following.** The answer style rules and the ban on inventing names are instructions, and a model that drifts from them produces confident nonsense. The approval gate in front of every change is not an instruction, so a model that ignores its prompt still cannot write anything on its own.
+
+### Where to start per provider
+
+Collabase suggests one model per provider. These are sensible starting points, not the only options.
+
+| Provider | Suggested model |
+|---|---|
+| **Self-hosted** | `llama3.2` |
+| **OpenAI** | `gpt-4o-mini` |
+| **Google Gemini** | `gemini-2.0-flash` |
+| **Azure AI Foundry** | `gpt-4o-mini` |
+| **Groq** | `openai/gpt-oss-120b` |
+| **Anthropic** | `claude-sonnet-4-20250514` |
+| **Infomaniak** | `mistral24b` |
+
+### How the tiers compare
+
+| Model tier | Cost | Fit for the assistant |
+|---|---|---|
+| **Small hosted** (`gpt-4o-mini`, `gemini-2.0-flash` class) | Cheapest per token | The sensible default. Fast, handles the skills, cheap enough that the 100-user calculation above lands in single or low double-digit dollars |
+| **Fast inference** (Groq) | Free tier, then low | Very fast answers. Cannot carry semantic search, so do without it |
+| **Swiss-hosted** (Infomaniak) | Mid | The choice when processing has to stay in Switzerland. Verify tool calling on the specific model before rolling out |
+| **Mid-range hosted** (Claude Sonnet class) | Roughly 5 to 10 times a small model | Strong at instruction following and multi-step work, which is what the skills demand. A reasonable step up when a small model keeps guessing. Note it cannot carry semantic search |
+| **Large hosted** (frontier models, including the largest Claude models) | 10 to 30 times a small model | Noticeably better at long multi-step work. Rarely worth it for the questions users actually ask |
+| **Self-hosted, small** (3B class such as `llama3.2`) | Hardware only | Fine for the writing assistant. Not reliable for the assistant's skills |
+| **Self-hosted, mid or large** (20B and up with tool-calling support) | Hardware only | The full assistant with no per-token cost. Needs a real GPU and enough memory for a 32,000-token context, 64,000 with semantic search on |
+
+<Tip>
+  Start on a small hosted model, run it for a month, then compare your provider's usage dashboard against the estimate on this page. Move up a tier only if you can point at questions the model actually got wrong.
+</Tip>
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="AI Configuration" icon="gear" href="/admin/ai-configuration">
+    Connecting the provider, enabling semantic search, and what each provider can do.
+  </Card>
+  <Card title="Using CollabaseAI" icon="comments" href="/concepts/collabase-ai">
+    What your users see once it is switched on.
+  </Card>
+</CardGroup>

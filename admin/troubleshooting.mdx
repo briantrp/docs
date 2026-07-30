@@ -214,14 +214,14 @@ Collabase sends emails for password resets, notifications, and invitations. Thes
 
 ## AI features not responding
 
-### Cloud provider (OpenAI, Anthropic, Groq, Gemini)
+### Hosted provider (OpenAI, Gemini, Azure, Groq, Anthropic, Infomaniak)
 
 <Steps>
   <Step title="Verify the API key">
-    Go to **Admin → Settings → AI**. Re-enter the API key for your provider and click **Test Connection**. API keys expire or get revoked — generate a new one from your provider's dashboard if needed.
+    Go to **Admin → Settings → AI settings → Language model**. Re-enter the API key for your provider and click **Save and test**. API keys expire or get revoked — generate a new one from your provider's dashboard if needed.
   </Step>
-  <Step title="Check that Collabase Brain is toggled on">
-    The master switch at the top of the AI settings page must be enabled. If it is off, all AI features are hidden from users.
+  <Step title="Check that CollabaseAI is toggled on">
+    The master switch at the top of the **Language model** page must be enabled. If it is off, all AI features are hidden from users.
   </Step>
   <Step title="Check the model name">
     Confirm the model name is spelled exactly as your provider expects — e.g. `gpt-4o-mini` not `gpt4o-mini`.
@@ -250,9 +250,25 @@ Collabase sends emails for password resets, notifications, and invitations. Thes
     ```
   </Step>
   <Step title="Check the Ollama URL in Collabase">
-    Go to **Admin → Settings → AI** and confirm the Ollama URL matches where Ollama is actually running. If Collabase is in Docker, use the host machine's IP address instead of `localhost` — e.g. `http://172.17.0.1:11434`.
+    Go to **Admin → Settings → AI settings → Language model** and confirm the Ollama URL matches where Ollama is actually running. If Collabase is in Docker, use the host machine's IP address instead of `localhost` — e.g. `http://172.17.0.1:11434`.
   </Step>
 </Steps>
+
+### The CollabaseAI launcher is missing
+
+The launcher at the bottom centre of the screen appears only when the master switch is on **and** a provider other than **Disabled** is selected. Both conditions are checked in the browser, so users need to reload the page after you save the settings.
+
+### Semantic search returns nothing
+
+Check which provider is configured. Neither Groq nor Anthropic has an embeddings endpoint, and Gemini's embeddings are not wired into Collabase, so with any of the three as the chat provider nothing can be indexed. Switch to a self-hosted, OpenAI, Azure or Infomaniak provider, then re-save a page to confirm indexing works. See [AI Configuration](/admin/ai-configuration).
+
+### The assistant says the provider is unavailable
+
+The chat panel shows one message for every kind of failure, so the banner alone does not identify the cause. Read the application log for the real error:
+
+```bash
+docker compose -f deployment/docker/docker-compose.release.yml logs collabase-app | grep -i brain
+```
 
 ---
 

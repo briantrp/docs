@@ -86,7 +86,7 @@ Once it finishes, you will see a confirmation message with your URL. Open it in 
 </Tip>
 
 <Note>
-  AI features (Brain, chat, AI automation) use the AI provider you configure after installation under **Settings → AI** — for example OpenAI, Anthropic, or your own Ollama server. They do not need extra server RAM.
+  AI features (the CollabaseAI assistant, writing assistance, AI automation) use the AI provider you configure after installation under **Settings → AI settings → Language model** — for example OpenAI, Anthropic, or your own Ollama server. They do not need extra server RAM.
 </Note>
 
 ---
@@ -178,9 +178,9 @@ Something else on your server is using a required port. Find it and stop it, the
 sudo ss -tlnp | grep ':80\|:443'
 ```
 
-### The AI / Brain feature is not available
+### CollabaseAI is not available
 
-AI features need an AI provider to be configured. Go to **Settings → AI**, choose a provider (for example OpenAI or your own Ollama server), enter its access key, and use the **Test connection** button. If the test succeeds and Brain still does not work, contact Collabase support.
+AI features need an AI provider to be configured. Go to **Settings → AI settings → Language model**, choose a provider (for example OpenAI or your own Ollama server), enter its access key, and click **Save and test**. Reload the page afterwards, because the assistant launcher is only drawn once the setting has reached the browser. If the test succeeds and the assistant still does not work, contact Collabase support.
 
 ### I need help
 

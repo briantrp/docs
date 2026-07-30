@@ -161,6 +161,53 @@ Once available, you will select multiple work items using the checkbox in the Wo
   Bulk delete is permanent and cannot be undone. Confirm the selection before proceeding.
 </Warning>
 
+## Moving a work item to another project
+
+A work item can be moved to a different project, including a project in another Space. Open the work
+item, then choose **Move work item** from the menu in the top right. The entry appears only if your
+role includes the **Move tasks** permission.
+
+The move runs in three steps.
+
+<Steps>
+  <Step title="Choose the destination">
+    Search for the target project. Only projects you may create work items in are listed. Then pick
+    the work item type it should use there. The type decides which workflow applies, and therefore
+    which statuses you can map onto in the next step.
+  </Step>
+  <Step title="Map statuses and fields">
+    Each status currently in use gets a destination column. Collabase preselects a column with the
+    same name, or failing that one in the same state. Any custom field values the destination
+    cannot show are listed here, so you see what will be set aside before you commit.
+  </Step>
+  <Step title="Review and confirm">
+    The summary shows how many items will move and how many field values will be archived. Confirm
+    to run the move.
+  </Step>
+</Steps>
+
+### What changes
+
+| Item | Result |
+|---|---|
+| Key | The work item gets a new key in the destination project |
+| Sub-items | Move along with the parent, each with its own new key |
+| Comments, attachments, checklists, time entries | Move with the work item |
+| Cycle, group and service category | Cleared, because they belong to the old project |
+| Labels, versions and test milestones | Cleared only when moving to another Space |
+| Assignee | Kept. You are warned if that person cannot see the destination Space |
+| Custom field values | Kept where the destination shows the same field, archived otherwise |
+
+<Note>
+  The old key keeps working. Links in comments, notifications and bookmarks continue to open the
+  work item at its new location, and the old key is never reused by another item.
+</Note>
+
+<Warning>
+  A move cannot be undone in one action. Archived field values are stored and can be recovered by an
+  administrator, but moving the item back does not restore them automatically.
+</Warning>
+
 ## Custom fields
 
 Custom fields extend the standard field set with fields specific to your workflow. They are configured by an admin and attached to task types. The following field types are available:

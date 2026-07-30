@@ -1,28 +1,55 @@
 ---
 sidebarTitle: "AI Features"
-description: "Where AI appears in Collabase, how to use it, and what the difference is between local and cloud AI providers."
+description: "Where AI appears in Collabase, how to use it, and what changes depending on whether your provider runs locally or in the cloud."
 ---
 
-Collabase integrates AI throughout the platform under the name **Collabase Brain**. All AI features share a single provider configuration set by your administrator. Configure the provider once and every feature benefits automatically.
+Collabase's AI features run under the name **CollabaseAI**. They share a single provider configuration set by your administrator, so the provider is chosen once and every feature uses it.
 
-AI features are **off by default**. An admin must enable them under **Admin → Settings → AI** before they are available to users. See [AI Configuration](/admin/ai-configuration) for setup instructions.
+AI features are **off by default**. An admin must enable them under **Admin → Settings → AI settings → Language model** before they are available. See [AI Configuration](/admin/ai-configuration) for setup instructions.
 
 ---
 
 ## Where AI appears in Collabase
 
 <CardGroup cols={2}>
-  <Card title="Writing assistant" icon="pen-to-square">
-    Generate, summarize, translate, and improve text in any editor — Docs pages, task descriptions, Intranet posts, and Registry text fields.
+  <Card title="The CollabaseAI assistant" icon="comments" href="/concepts/collabase-ai">
+    A chat panel that answers questions about your work and acts on it: finding work items, reading pages and test runs, creating pages and Registry objects, moving items through the workflow, writing comments.
   </Card>
-  <Card title="Task description generation" icon="list-check">
-    Automatically generate a clear task description from a short title or prompt in the Projects module.
+  <Card title="Writing assistant" icon="pen-to-square">
+    Generate, summarize, translate, and improve text in any editor: Docs pages, task descriptions, Intranet posts, and Registry text fields.
   </Card>
   <Card title="Automation AI nodes" icon="bolt">
     Use AI actions inside automation pipelines to generate text, summarize inputs, or classify data as part of a larger workflow.
   </Card>
   <Card title="Semantic search" icon="magnifying-glass">
-    Ask questions in plain language and receive answers grounded in your actual Docs content, with links to source pages.
+    Ask questions in plain language and receive answers grounded in your own pages, work items and comments, with links to the sources.
+  </Card>
+</CardGroup>
+
+---
+
+## The CollabaseAI assistant
+
+The assistant is the chat panel behind the mark at the bottom centre of the screen, or `Cmd` + `J` / `Ctrl` + `J`. It reads your work items, pages, cycles, discussions, Registry objects and test runs, and it writes: new pages and whiteboards, new and changed work items and Registry objects, status moves, comments.
+
+It only ever sees what you can see, chats are private to you, and they are deleted after 30 days.
+
+### Nothing is changed without your approval
+
+Every change the assistant wants to make appears in the chat as a card naming exactly what it would do — the work item it would create, the status it would set, the wording of the comment it would post. The card has an **Approve** and a **Reject** button, and nothing happens until you press Approve. Rejecting changes nothing.
+
+This cannot be switched off, and the reason is worth knowing. The assistant reads pages, work items and comments written by other people, and a sentence inside one of them can be phrased as an instruction to it. The approval card is what stands between such a sentence and a change made under your name.
+
+<Note>
+  Approve a card once and the action runs once. If your connection drops while it is working, reconnecting does not create the same work item a second time.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="Using the assistant" icon="comments" href="/concepts/collabase-ai">
+    Where the launcher sits, the shortcut, suggestion chips, conversation history, and what it does with your data.
+  </Card>
+  <Card title="Skill reference" icon="list" href="/concepts/collabase-ai-skills">
+    Every skill it has, grouped by subject, with an example of how to ask for each one.
   </Card>
 </CardGroup>
 
@@ -30,7 +57,7 @@ AI features are **off by default**. An admin must enable them under **Admin → 
 
 ## Writing assistant
 
-The AI writing assistant is available anywhere you write content in Collabase. Type `/ai` on any line to open the action menu.
+The AI writing assistant is available anywhere you write content in Collabase, except on a page someone else is editing at the same time. Type `/ai` on any line to open the action menu.
 
 | Command | What it does |
 |---|---|
@@ -45,22 +72,32 @@ The AI writing assistant is available anywhere you write content in Collabase. T
 
 If text is selected, the command operates on the selection. If nothing is selected, it operates on the paragraph at the cursor.
 
+### Not available while others are editing with you
+
+On a page with a live editing session, `/ai` and the inline suggestions are switched off for everyone in that session. The writing assistant types its answer into the document as the model produces it, so in a shared session everyone would watch half-finished sentences appear, and undo would no longer reliably step back through your own edits.
+
+The CollabaseAI assistant still works on those pages. Ask it in the panel to summarize, rewrite or extend the page, and approve the change it proposes.
+
 ---
 
 ## Semantic search
 
-When semantic search is enabled by your admin, you can ask questions in plain language using the Brain chat or the global search bar. Collabase retrieves relevant content from your Docs pages and generates a grounded answer with links to the source material.
+When semantic search is enabled by your admin, questions you ask the assistant are matched against the text of your content by meaning rather than by title, and the most relevant passages are used to ground the answer. Sources are listed as links at the end.
 
 **Example questions:**
 - "What is our approval process for purchasing new software?"
 - "Which team is responsible for infrastructure security?"
 - "What were the key decisions from the Q2 planning meeting?"
 
+It covers three things: Collabase Docs pages, the descriptions of work items, and comments on both. Comments matter more than they sound, because the reasoning behind a decision usually lives in a comment thread rather than in the page it belongs to.
+
 <Note>
-  Semantic search covers Docs pages. Tasks, registry objects, and test cases are matched by keyword search.
+  A comment is only ever as reachable as the page or work item it was written on. Comments on something you cannot open never appear in your results.
 </Note>
 
-Pages are indexed automatically when they are saved. New content is available in semantic search within a few seconds.
+Registry objects are not covered. The assistant reaches those through its own Registry skills, which check your permissions object by object.
+
+Content is indexed automatically when it is saved, and is available in semantic search within a few seconds.
 
 ---
 
@@ -80,72 +117,46 @@ AI nodes connect to the same provider configured globally, or to a separately co
 
 Your administrator chooses which AI provider Collabase uses. The choice affects privacy, cost, and capability.
 
-### Local AI (Ollama) — privacy-first
+### Self-hosted, privacy-first
 
 | Aspect | Detail |
 |---|---|
-| **Where processing happens** | On your own server |
+| **Where processing happens** | On your own server, through Ollama or any OpenAI-compatible endpoint |
 | **Data residency** | Nothing leaves your infrastructure |
-| **Internet required** | No — works fully offline after setup |
-| **Cost** | No per-token fees — only your own server hardware |
-| **Setup** | Requires installing Ollama on your server and downloading a model |
+| **Internet required** | No, it works fully offline after setup |
+| **Cost** | No per-token fees, only your own server hardware |
+| **Setup** | Requires running the model server yourself and downloading a model |
 
-Ollama is the recommended choice for organizations that cannot allow content to be sent to external services — such as organizations handling sensitive legal, financial, or healthcare data.
+Self-hosting is the choice for organisations that cannot allow content to be sent to external services, such as those handling sensitive legal, financial, or healthcare data.
 
-### Cloud AI providers
+### Hosted providers
 
 | Provider | Notes |
 |---|---|
-| **OpenAI** (GPT-4o, GPT-4o-mini) | Widely used, strong general-purpose models |
-| **Anthropic** (Claude) | Strong at writing, summarization, and following instructions |
-| **Groq** | Fast inference, generous free tier |
+| **OpenAI** | Widely used, strong general-purpose models |
 | **Google Gemini** | Large context window, multimodal capability |
-| **Azure AI Foundry** | Enterprise OpenAI models in your Azure subscription — useful for organizations already in Azure |
+| **Azure AI Foundry** | OpenAI models inside your own Azure subscription |
+| **Groq** | Very fast inference, generous free tier. Cannot produce embeddings, so it cannot carry semantic search |
+| **Anthropic** | Claude models, strong at writing, summarisation and following instructions. Also has no embeddings API |
+| **Infomaniak** | Swiss-hosted AI Tools, for organisations that need processing to stay in Switzerland |
 
-Cloud providers offer more capable models and require no server hardware, but content sent to AI actions is processed on the provider's infrastructure. Review each provider's data processing terms if your organization has specific requirements.
+Hosted providers offer more capable models and require no server hardware, but content sent to AI actions is processed on the provider's infrastructure. Review each provider's data processing terms if your organisation has specific requirements.
 
 ---
 
-## Which features work with local vs. cloud AI
+## Which features work with a self-hosted provider
 
-| Feature | Works with Ollama | Works with cloud providers |
+| Feature | Self-hosted | Hosted providers |
 |---|---|---|
-| Writing assistant (/ai command) | Yes | Yes |
-| Task description generation | Yes | Yes |
+| Writing assistant (`/ai` command) | Yes, except while others are editing the same page | Yes, except while others are editing the same page |
+| CollabaseAI assistant | Yes, with a model that supports tool calling | Yes |
 | Automation AI nodes | Yes | Yes |
-| Semantic search (keyword) | Yes — no AI needed | Yes — no AI needed |
-| Semantic search (RAG / plain-language questions) | Yes, with an embedding model (e.g. `nomic-embed-text`) | Yes |
-
----
-
-## AI logs
-
-Admins can see a complete history of every AI request made across the platform at **Admin → Settings → AI → Logs**. Each log entry shows:
-
-| Field | Description |
-|---|---|
-| **Timestamp** | When the request was made |
-| **Feature** | Which feature triggered it — editor, semantic search, or automation |
-| **Model** | The model that processed the request |
-| **Tokens used** | Total token count for the request and response |
-| **Latency** | Time from request to response |
-| **Status** | Success, or an error message |
-
-Use the logs to debug AI issues — if the writing assistant is not working for a user, the error in the log tells you exactly what went wrong.
-
-### Common errors and fixes
-
-| Error message | What it means | Fix |
-|---|---|---|
-| `Connection refused` | Ollama is not running or not reachable | Start Ollama on the server |
-| `model not found` | The model has not been downloaded to Ollama | Run `ollama pull <model-name>` on the server |
-| `invalid_api_key` | The API key for the cloud provider is wrong or expired | Generate a new key from the provider and update it in **Admin → Settings → AI** |
-| `context length exceeded` | The input is too long for the model | Reduce the input size or switch to a model with a larger context window |
+| Keyword search | Yes, no AI involved | Yes, no AI involved |
+| Semantic search | Yes, with an embedding model such as `nomic-embed-text` | Yes. Groq and Anthropic need a second provider for the embedding model |
 
 ---
 
 ## For administrators
 
-- AI setup: **Admin → Settings → AI** — see [AI Configuration](/admin/ai-configuration)
-- Space-level model override: **Space Settings → AI** — lets individual spaces use a different model than the default
-- AI logs: **Admin → Settings → AI → Logs** — shows every AI request, tokens used, latency, and errors
+- AI setup: **Admin → Settings → AI settings**, four pages covering the language model, semantic search, re-ranking and usage. See [AI Configuration](/admin/ai-configuration)
+- Choosing a model and estimating what it will cost: [AI Model & Cost Planning](/admin/ai-costs)

@@ -48,6 +48,12 @@ The whole process typically takes **2–5 minutes** depending on your server's i
 
 Open Collabase in a browser and confirm it loads correctly. Check the current version in **Admin → Settings → About**.
 
+### Rebuild the semantic search index
+
+If you use semantic search, it stops returning results immediately after this upgrade. Entries made by the previous configuration are no longer comparable with the ones the current setup produces, so they are ignored rather than mixed into the results. Keyword search is unaffected, and so is everything else the assistant does.
+
+The nightly maintenance pass repairs the index on its own. To have it back the same day, go to **Admin → Settings → AI settings → RAG model & pipeline** and click **Rebuild** next to the status panel. It queues everything the index is missing and reports how many items went into the queue. On a large instance the queue takes a while to drain, and search improves as it does.
+
 ---
 
 ## If the update fails

@@ -196,16 +196,27 @@ status = "In Progress" ORDER BY priority DESC, dueDate ASC
 
 ## Semantic search (AI-powered)
 
-When an admin has enabled **Semantic Search** under **Admin → Settings → AI**, you can ask questions in plain language and receive answers grounded in your actual content:
+When an admin has enabled semantic search under **Admin → Settings → AI settings → RAG model & pipeline**, you can ask questions in plain language and receive answers grounded in your actual content:
 
 - "What is our onboarding process for new hires?"
 - "Which test cases cover the payment module?"
 - "What did we decide about the API versioning policy?"
 
-Semantic search retrieves the most relevant content and generates a summary with links to the source pages. This is separate from keyword search — both run when semantic search is enabled.
+Semantic search retrieves the most relevant passages and generates a summary with links to the sources. This is separate from keyword search — both run when semantic search is enabled.
+
+### What it covers
+
+| Content | Covered |
+|---|---|
+| **Pages** (Collabase Docs) | Title and body |
+| **Work items** | The description. A title on its own is already found by keyword search |
+| **Comments** | On work items and on pages |
+| **Registry objects** | No. Found by keyword search, and by CollabaseAI's own Registry skills |
+
+Comments are the addition worth knowing about, because no search in Collabase reached them before — and the reasoning behind a decision usually sits in a comment thread rather than in the page it belongs to.
 
 <Note>
-  Semantic search only covers **pages** (Docs content). Tasks and registry objects are matched by keyword search only.
+  A comment is only ever as reachable as the page or work item it was written on. If you cannot open the item, its comments never appear in your results. Pages with restricted access are left out of semantic search entirely.
 </Note>
 
 For semantic search setup, see [AI Configuration](/admin/ai-configuration).
@@ -236,7 +247,7 @@ These appear when the search panel is open but no text has been entered yet.
 - **Use the task key.** If you know a task's key (e.g. `ENG-42`), searching for it returns the exact task immediately.
 - **Filter by space.** In large installations with many spaces, adding the space filter dramatically reduces noise and speeds up finding what you need.
 - **Try different word forms.** If "onboard" returns no results, try "onboarding" — the index matches on word boundaries.
-- **Semantic search for questions.** If keyword search is not finding the answer to a question, try phrasing it as a question in the search bar — if semantic search is enabled, it will use your Docs content to answer it.
+- **Semantic search for questions.** If keyword search is not finding the answer to a question, try phrasing it as a question in the search bar — if semantic search is enabled, it will answer from your pages, work items and comments.
 
 ---
 

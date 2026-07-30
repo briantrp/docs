@@ -1,61 +1,70 @@
 ---
 sidebarTitle: "AI Configuration"
-description: "Connect Collabase to an AI provider and configure which AI features are available to your users."
+description: "Connect Collabase to an AI provider, enable semantic search, and understand what each provider can and cannot do."
 ---
 
-Collabase includes AI-powered features across multiple modules — writing assistance in Docs, task description generation in Projects, AI nodes in Automation, and semantic search across all content. All of these share a single AI provider configuration that you set up once.
+Collabase's AI features run under the name **CollabaseAI**: the assistant panel, writing assistance in Docs, task description generation in Projects, AI nodes in Automation, and semantic search.
 
-All AI features are **off by default**. Enable them under **Admin → Settings → AI**.
+All AI features are **off by default**. The settings live under **Admin → Settings → AI settings**, split into four pages:
+
+| Page | What it configures |
+|---|---|
+| **Language model** | The model that writes answers. Everything else is optional on top of it. |
+| **RAG model & pipeline** | The embedding model that indexes your pages, and how results are ranked. |
+| **Re-ranking model** | An optional second model that reorders search results before the answer is written. |
+| **Usage** | Token consumption, cost, and whether each of the three slots is currently working. |
+
+These are **three separate models with three separate providers**. A chat provider that cannot produce embeddings does not stop semantic search from working, as long as you point the embedding slot somewhere else. Each slot has its own switch, and each one degrades on its own: without an embedding model the assistant still answers, without a re-ranking model search still finds.
 
 ---
 
 ## Choosing a provider
 
-Collabase supports both local and cloud AI providers. Choose the option that fits your organization's requirements.
-
 <CardGroup cols={3}>
-  <Card title="Ollama (Local)" icon="server">
-    Runs AI models on your own server. No data leaves your infrastructure. Recommended for organizations with strict data residency or privacy requirements.
+  <Card title="Self-hosted" icon="server">
+    Ollama, or any OpenAI-compatible endpoint you run yourself. No data leaves your infrastructure. The choice for strict data residency or privacy requirements.
   </Card>
   <Card title="OpenAI" icon="globe">
-    Use GPT-4o, GPT-4o-mini, or other OpenAI models via the OpenAI API. Requires an API key from platform.openai.com.
-  </Card>
-  <Card title="Anthropic" icon="sparkles">
-    Use Claude models via the Anthropic API. Requires an API key from console.anthropic.com.
-  </Card>
-  <Card title="Groq" icon="zap">
-    Fast cloud inference with a generous free tier. Requires an API key from console.groq.com.
+    GPT models via the OpenAI API. Requires an API key from platform.openai.com.
   </Card>
   <Card title="Google Gemini" icon="star">
-    Use Gemini models via Google AI Studio. Requires an API key from aistudio.google.com.
+    Gemini models via Google AI Studio. Requires an API key from aistudio.google.com.
   </Card>
   <Card title="Azure AI Foundry" icon="cloud">
-    Enterprise OpenAI models deployed in your own Azure subscription.
+    OpenAI models deployed in your own Azure subscription.
+  </Card>
+  <Card title="Groq" icon="zap">
+    Very fast inference with a generous free tier. Requires an API key from console.groq.com.
+  </Card>
+  <Card title="Anthropic" icon="comments">
+    Claude models via the Anthropic API. Requires an API key from console.anthropic.com.
+  </Card>
+  <Card title="Infomaniak" icon="shield-check">
+    Swiss-hosted AI Tools. Requires an API key and the base URL of your AI Tools product.
   </Card>
 </CardGroup>
+
+The deciding question is usually whether content may leave your infrastructure. Groq and Anthropic have no embeddings API at all, so they cannot carry semantic search — but that is no longer a reason to avoid them as your chat provider: point the embedding slot at a local Ollama and keep Groq for the answers. See [Semantic search](#semantic-search) below.
 
 ---
 
 ## Setting up a provider
 
 <Steps>
-  <Step title="Go to Admin → Settings → AI">
-    Open the admin panel and navigate to the AI settings page.
+  <Step title="Go to Admin → Settings → AI settings → Language model">
+    Open the admin panel and navigate to the language model page.
   </Step>
-  <Step title="Toggle Collabase Brain to Enabled">
-    This master switch controls all AI features. When it is off, the AI command is hidden from the editor and AI automation nodes will not run.
+  <Step title="Toggle CollabaseAI to Enabled">
+    This master switch controls all AI features. When it is off, the assistant launcher is hidden, the `/ai` command disappears from the editor, and AI automation nodes do not run.
   </Step>
   <Step title="Select your provider">
-    Choose one of the available providers from the list. The configuration fields below update to match the selected provider.
+    Choose one of the tiles. The configuration fields below update to match the selection.
   </Step>
   <Step title="Enter your credentials">
-    Fill in the required fields for your provider (see tables below).
+    Fill in the fields for your provider, see the tables below. API keys are encrypted before they are stored and are never written to logs.
   </Step>
-  <Step title="Click Test Connection">
-    Collabase will attempt a short request to verify the credentials and model are reachable before you save.
-  </Step>
-  <Step title="Save">
-    The settings take effect immediately. Users can now use AI features throughout the platform.
+  <Step title="Click Save and test">
+    Collabase saves the page, then calls the model once and makes it use a tool. Tool calling is the one capability the assistant cannot work without, and a model that answers prose but refuses tools passes a plain ping and fails on the first real question.
   </Step>
 </Steps>
 
@@ -63,115 +72,196 @@ Collabase supports both local and cloud AI providers. Choose the option that fit
 
 ## Provider configuration fields
 
-### Ollama (local)
+### Self-hosted
 
-[Install Ollama](https://ollama.com) on your server first, then pull the model you want to use (e.g. `ollama pull llama3.2`).
+[Install Ollama](https://ollama.com) on your server first, then pull the model you want (`ollama pull llama3.2`). Any other OpenAI-compatible endpoint works the same way.
 
 | Field | Description |
 |---|---|
-| **Ollama URL** | The address where Ollama is running — e.g. `http://localhost:11434` |
-| **Model** | The model name to use — e.g. `llama3.2` or `mistral` |
+| **Ollama Base URL** | Where the model server is running, for example `http://localhost:11434` |
+| **Model** | The model name, for example `llama3.2` |
 
 <Note>
-  With Ollama, all AI processing stays on your own server. No content is sent to any external service. This is the recommended choice for organizations that cannot allow data to leave their infrastructure.
+  With a self-hosted provider, all processing stays on your own server. No content is sent to any external service.
 </Note>
+
+<Warning>
+  Small local models handle the writing assistant well but are unreliable for the CollabaseAI assistant, which sends 34 skill definitions with every request and expects the model to call them correctly. Use an instruction-tuned model with proper tool-calling support, and check [AI Model & Cost Planning](/admin/ai-costs) for the context window it needs.
+</Warning>
 
 ### OpenAI
 
 | Field | Description |
 |---|---|
 | **API Key** | Your OpenAI API key from platform.openai.com |
-| **Model** | The model to use — e.g. `gpt-4o-mini` or `gpt-4o` |
-
-### Anthropic
-
-| Field | Description |
-|---|---|
-| **API Key** | Your Anthropic API key from console.anthropic.com |
-| **Model** | The model to use — e.g. `claude-3-5-haiku-20241022` |
-
-### Groq
-
-| Field | Description |
-|---|---|
-| **API Key** | Your Groq API key from console.groq.com |
-| **Model** | The model to use — e.g. `llama-3.3-70b-versatile` |
+| **Model** | The model to use, for example `gpt-4o-mini` |
 
 ### Google Gemini
 
 | Field | Description |
 |---|---|
 | **API Key** | Your Google AI Studio API key |
-| **Model** | The model to use — e.g. `gemini-2.0-flash` |
+| **Model** | The model to use, for example `gemini-2.0-flash` |
 
 ### Azure AI Foundry
 
 | Field | Description |
 |---|---|
-| **Endpoint URL** | Your Azure AI Foundry deployment URL |
+| **Azure Endpoint URL** | Your deployment URL, in the form `https://<resource>.services.ai.azure.com/openai` |
 | **API Key** | Your Azure API key |
-| **Model** | The deployed model name |
+| **Model** | The name of the deployed model |
 
----
+### Groq
 
-## Space-level model override
-
-Individual spaces can override the global AI provider settings with a different model — useful if one team needs a more capable (or more cost-efficient) model than the default.
-
-<Steps>
-  <Step title="Open the space and go to Space Settings">
-    Click the gear icon in the space sidebar.
-  </Step>
-  <Step title="Select the AI tab">
-    This tab appears only when Collabase Brain is enabled globally.
-  </Step>
-  <Step title="Choose a different model">
-    Select any model available from the configured provider, or leave it set to the global default.
-  </Step>
-  <Step title="Save">
-    The override applies immediately for all AI requests made within this space.
-  </Step>
-</Steps>
-
----
-
-## Where AI is used in Collabase
-
-| Feature | Where it appears | Works with local Ollama? |
-|---|---|---|
-| **Writing assistant** | Docs editor, Intranet posts — type `/ai` to open the menu | Yes |
-| **Task description generation** | Projects — task detail panel | Yes |
-| **AI automation nodes** | Automation pipelines — AI/LLM connector | Yes |
-| **Semantic search** | Global search — plain-language question answering over your content | Yes (with an embedding model) |
-
-### Writing assistant commands
-
-Once AI is configured, users can type `/ai` in any text editor to open the AI action menu:
-
-| Command | What it does |
+| Field | Description |
 |---|---|
-| **Generate** | Write new content from a prompt |
-| **Summarize** | Condense the current page or selected text |
-| **Improve writing** | Refine grammar, clarity, and tone |
-| **Fix spelling & grammar** | Correct errors — tone is preserved |
-| **Make shorter / Make longer** | Adjust the length of selected text |
-| **Translate** | Translate selected text to a language you choose |
-| **Continue writing** | Extend the text from the current cursor position |
+| **API Key** | Your Groq API key from console.groq.com |
+| **Model** | The model to use, for example `openai/gpt-oss-120b` |
+
+### Anthropic
+
+| Field | Description |
+|---|---|
+| **API Key** | Your Anthropic API key from console.anthropic.com |
+| **Model** | The model to use, for example `claude-sonnet-4-20250514` |
+
+### Infomaniak
+
+Infomaniak AI Tools is OpenAI-compatible, but the product id of your account is part of the URL, so the base URL is specific to your tenant.
+
+| Field | Description |
+|---|---|
+| **Infomaniak Base URL** | `https://api.infomaniak.com/2/ai/<product_id>/openai/v1`, with your own product id |
+| **API Key** | Your Infomaniak API token |
+| **Model** | The model to use, for example `mistral24b` |
 
 ---
 
 ## Semantic search
 
-When **Semantic Search** is enabled in **Admin → Settings → AI**, Collabase indexes all pages and allows users to ask plain-language questions and receive answers grounded in your actual content.
+Semantic search indexes the text of your pages so plain-language questions can be answered from your own content. Turn it on with the switch on **Admin → Settings → AI settings → RAG model & pipeline**. Nothing is indexed while that switch is off.
 
-Configure the embedding source separately if needed:
+Indexing needs an **embedding model**, which is a different kind of model from the chat model. Not every provider offers one.
 
-| Option | Description |
+| Provider | Can produce embeddings |
 |---|---|
-| **Same as AI provider** | Uses the same model for both generation and embeddings. Works for most setups. |
-| **Custom provider** | Use a dedicated embedding model for better search accuracy. Recommended for Ollama: use `nomic-embed-text` or `mxbai-embed-large`. |
+| **Self-hosted** (Ollama) | Yes, with a model such as `nomic-embed-text` |
+| **OpenAI** | Yes, with a model such as `text-embedding-3-small` |
+| **Google Gemini** | Yes, with `text-embedding-004` |
+| **Azure AI Foundry** | Yes, through the embedding deployment on your resource |
+| **Infomaniak** | Yes, through the same base URL |
+| **Groq** | No. Groq has no embeddings endpoint at all |
+| **Anthropic** | No. Anthropic has no embeddings endpoint at all |
 
-Pages are indexed automatically when saved. New content is available in semantic search within a few seconds.
+Groq and Anthropic are not offered as an embedding source. If one of them is your chat provider, choose **Separate provider** and point the embedding slot at something else — a local Ollama is the usual answer, and it keeps your page content on your own server even when the answers come from a hosted model.
+
+### Embedding source
+
+| Option | What it does |
+|---|---|
+| **Same as the AI provider** | Reuses the provider and credentials from the language model page. The model still comes from the field below, because a chat model cannot produce embeddings. |
+| **Separate provider** | Its own provider, model, endpoint and key, independent of the chat model. |
+
+<Warning>
+  The index stores vectors of a fixed width of **768 dimensions**. OpenAI's `text-embedding-3-*` models are shortened to 768 automatically; `nomic-embed-text` and `text-embedding-004` produce 768 natively. A model that returns anything else is refused with a message on the status panel rather than failing silently. `text-embedding-ada-002` cannot be used.
+</Warning>
+
+Changing the embedding model does not corrupt anything: search only compares entries produced by the model currently in use, so the older ones are ignored rather than mixed in. They are also useless until rebuilt, which is what the **Rebuild** button next to the status panel is for. It queues everything the index is currently missing and reports how many items went into the queue. Until it has run, semantic search finds progressively less while keyword search is unaffected.
+
+Rebuild after every embedding-model change. The nightly pass repairs the index on its own eventually; the button is how you get it back the same day.
+
+### What gets indexed
+
+| Source | Indexed |
+|---|---|
+| **Pages** | Title and body, on save, on creation, and when restored from the trash. Deleting a page removes it. |
+| **Work items** | The description, when there is one. A title alone is already found by keyword search. |
+| **Comments** | On work items and on pages. Until this existed, comments were findable by no search in Collabase at all — which is where a lot of the reasoning behind a decision tends to live. |
+
+Registry objects are not indexed; the assistant reaches them through its Registry skills, which check permissions per object.
+
+Unchanged content is not re-indexed, so repeatedly saving the same page costs nothing. A nightly pass also picks up anything an interruption caused the index to miss, so it converges on its own without an administrator watching it.
+
+<Note>
+  A comment is only ever as reachable as the thing it hangs on: search results respect the permissions of the page or work item it was written on. Comments on pages you cannot open never appear.
+</Note>
+
+### How results are ranked
+
+Two searches run over the same set of pages and their results are merged:
+
+- **Meaning**, using the embedding model. Finds the right paragraph when the words differ from the question.
+- **Exact words**, using the database's own text search. Finds ticket keys, product names and abbreviations, which embeddings are consistently bad at.
+
+Turning **Hybrid search** off leaves only the first. Two more settings control volume:
+
+| Setting | What it does |
+|---|---|
+| **Candidates** | How many passages are collected before ranking. More costs time; fewer risks missing the right one. |
+| **Passages per answer** | How many passages the model actually reads. Too many bury the relevant one. |
+
+Restricted pages, and everything filed underneath them, are deliberately left out of semantic search entirely, even for people who may read them. Search results are always limited to the spaces the person asking may open.
+
+### Checking that it works
+
+The **Status** panel on the RAG page calls the configured embedding endpoint for real and reports back, along with how many passages are currently indexed. An embedding model that reports as working next to an index of zero passages means nothing has been saved since you switched it on.
+
+---
+
+## Re-ranking
+
+Re-ranking is an optional second model that reads the question and each candidate passage **together** and reorders them. The embedding model has to describe each passage before anyone asks a question; a re-ranking model sees both at once, which is why it orders results better. It runs last, over a short list, and it is off by default.
+
+| Option | What it is |
+|---|---|
+| **No re-ranking** | Results keep the order the search gave them. |
+| **Own server** | A re-ranking service you run yourself. Collabase sends it the question and the candidate passages and expects the reordered list back. Nothing leaves your infrastructure. |
+| **Jina AI, Cohere, Voyage AI** | Hosted services. The question and the matching passages are sent to that provider. |
+| **Language model** | Reuses the chat model you already configured. No extra server, but one additional request per search. |
+
+<Warning>
+  A hosted re-ranking provider receives the text of the passages that matched, not just the question. If your instance has data residency requirements, use **Own server** or leave re-ranking off.
+</Warning>
+
+If the re-ranking model is slow, unreachable or misconfigured, search keeps working with the normal ranking and the answer is no worse than it would have been without re-ranking. It never blocks an answer.
+
+<Note>
+  Re-ranking reads the question against every candidate passage, one pair at a time, so it costs real processing time. On a server without a graphics card, run a small model or keep the candidate count low, and measure how long a search takes before turning it on for everyone.
+</Note>
+
+---
+
+## What the assistant may do on its own
+
+The assistant reads freely and writes never — not without being told so in the moment. Anything that
+changes something (creating or updating a work item, moving one, changing a status, writing a
+comment, creating or changing a page or Registry object) appears in the chat as a request to
+approve, showing exactly what it would do. Nothing happens until it is approved, and rejecting it
+changes nothing.
+
+This is not a politeness setting and cannot be switched off. The assistant reads pages, work items
+and comments written by other people, and text inside them can be phrased as an instruction to it.
+The approval is what stands between such a sentence and a change made under your name.
+
+<Note>
+  Approvals are bound cryptographically to the exact call they were issued for, and each approved
+  call is carried out at most once — a lost connection and a retry cannot produce the same work item
+  twice.
+</Note>
+
+## Thinking and reasoning
+
+Some models can show their reasoning before the answer. Whether that appears in the assistant panel depends entirely on the provider and the model:
+
+| Provider | Reasoning behaviour |
+|---|---|
+| **Groq** | Streams reasoning without extra configuration |
+| **Anthropic** | Collabase enables it with a thinking budget of 8,000 tokens |
+| **Google Gemini** | Collabase asks for it, the model decides how long to think |
+| **OpenAI, Azure AI Foundry** | A summary appears only on the reasoning model families, other models ignore the request |
+| **Infomaniak, self-hosted** | Appears only if the chosen model emits it |
+
+Reasoning is billed as output on hosted providers, so a thinking model costs more per answer than a comparable non-thinking one.
 
 ---
 
@@ -179,9 +269,27 @@ Pages are indexed automatically when saved. New content is available in semantic
 
 | Provider type | What happens to your content |
 |---|---|
-| **Ollama (local)** | All processing happens on your own server. Nothing is sent externally. |
-| **Cloud providers** (OpenAI, Anthropic, Groq, Gemini, Azure) | Content sent to AI actions is transmitted to the provider's API. Review each provider's data processing terms. API keys are encrypted at rest in Collabase and are never written to logs. |
+| **Self-hosted** | All processing happens on your own server. Nothing is sent externally. |
+| **Infomaniak** | Processing happens on Swiss infrastructure. |
+| **Other hosted providers** (OpenAI, Gemini, Azure, Groq, Anthropic) | Content sent to AI actions is transmitted to the provider's API. Review each provider's data processing terms. |
+
+API keys are encrypted at rest in Collabase and are never written to logs.
+
+Assistant chats are private to the user who wrote them. There is no administrator view of a chat, and every chat is deleted 30 days after it was last written to. Support questions of the form "what did the assistant tell me" cannot be answered by looking at the transcript, only by reproducing the question.
 
 <Warning>
-  If your organization has data residency requirements — for example, data must stay within Switzerland or the EU — use Ollama. Cloud providers process data on their own infrastructure.
+  If your organisation has data residency requirements, such as data staying within Switzerland or the EU, use a self-hosted provider or Infomaniak. The other hosted providers process data on their own infrastructure.
 </Warning>
+
+---
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="AI Model & Cost Planning" icon="calculator" href="/admin/ai-costs">
+    Which model to pick, how many tokens a request actually uses, and what a 100-user instance costs per month.
+  </Card>
+  <Card title="Using CollabaseAI" icon="comments" href="/concepts/collabase-ai">
+    What your users will see once you have enabled it.
+  </Card>
+</CardGroup>
